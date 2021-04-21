@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-20 12:42:02
+# @Last Modified time: 2021-04-21 13:24:27
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -28,7 +28,7 @@ from bs4 import BeautifulSoup
 
 
 
-def netmum_urls(lst):
+def get_urls(lst):
 	"""
 	This function uses netmums basic URL search which is faster
 	but has less functionality.
@@ -38,53 +38,72 @@ def netmum_urls(lst):
 		raise TypeError('list has no values')
 	return (['https://www.netmums.com/search/chat/' + terms for terms in lst])
 
-def netmum_pages():
+def get_next_pages(urlstring, l = 10):
 	"""
-	TODO for a url , regex the query and the create the pages to find
-	"""
-	pass
+	Returns a lit of string URL with /page:[num] appended for num in 1 to l.
 
-def getresults(urllist, rate=0.05):
+	l: number of pages of results
 	"""
-	Load URLs and the next pages
+	if l > 10 or l < 0:
+		raise Error('l must be between 1 and 10 inclusive')
+	elif bool(re.search('page:[0-9]',urlstring)):
+		raise Error('do not use URLs with a page number in them')
+	else:
+		myrange = range(2,l + 1)
+	return [urlstring + '/page:' + str(digit) for digit in myrange]
+
+
+def extract_links(html):
+	"""
+	TODO
+	extract links from a page of netmums basic search results
+	"""
+	soup = BeautifulSoup(html, 'html.parser')
+
+
+def getresults(url, rate=0.05, blurbs = False):
+	"""
+	TODO
+	Returns up to ten pages of results from a basic search query URL
+
+	Load URL and s... for a singel url
 	Return a list of discussion URLS from the results
 	- need to make sure that if redirected out of /chat just skip
 	default rate limite at 0.05 seconds per reuqest
 
 	"""
-	#get the html of search queries
-	#...
+	#get the html of a search query
+	html = requests.get(url).text
 
-	#get the results from them
-	#get the number of pages for each one. save to a list or dict.
+	#build list of URLS
+	next_pages = get_next_pages(url, get_num_pages(html))
+
+	#save all the htmls to a list
+	all_htmls = [html] + [requests.get(u).text for u in next_pages]
+
+	#get the results for each URL
+	mylinks = [extract_links(h) for h in all_html]
 
 	#using this list/dict get the remaining pages of results
 	#make a list of lists of html corresponding to each original search query url.
 
-	#return urllist, number of results, and all the htmls.
-	pass
 
 
-requests.post(URL, data=payload, headers=hdr)
-BeautifulSoup(r1.text, 'html.parser')
-
-
-
-### TESTING
-templ = netmum_urls(make_combo_list(problems, foods))
-
-
-#make the request for each url with a time in between. returns a list of request objs.
-#use 0.05s sleep just in case the site has some type of protection, don't want ot get blocked.
-query_rq = [requests.post(url).text for url in templ[1:10] if time.sleep(0.05) is None]
+	#blurb stuff
+	all_blurbs = None
+	#return url, number of results, and all the htmls, and datatype that ocntains blurb and user and title.
+	return url, numResults, all_htmls, all_blurbs
 
 
 
-def extract_search_results():
-	#for a list of list of html, use soup to find the URLs
-
-
-	#also find the text data and combine them all somehow and return that.
+#def extract_search_results():
+#	"""
+#
+#	"""
+#	#for a list of list of html, use soup to find the URLs
+#
+#
+#	#also find the text data and combine them all somehow and return that.
 
 # parse the html of our queries results
 query_soups = BeautifulSoup(query_rq, 'html.parser')
