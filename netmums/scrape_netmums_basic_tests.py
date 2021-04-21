@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 13:18:20
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-21 16:36:12
+# @Last Modified time: 2021-04-21 16:36:56
 
 import scrapehelpers #TODO not sure if this works, maybe just not working in REPL,
 
@@ -17,13 +17,14 @@ templ = netmum_urls(make_combo_list(problems, foods))
 query_rq = [requests.post(url).text for url in templ[1:3] if time.sleep(0.05) is None]
 
 
+#def
 #making thing to get links from search result page
 
 soup = BeautifulSoup(query_rq[0], 'html.parser')
 
 
 
-
+#def
 #soup to get the number of results
 
 res = int(re.search('\d+\s', soup.find('p', {'class':'search-results__count'}).text))

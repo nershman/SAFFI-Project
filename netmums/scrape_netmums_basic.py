@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-21 13:24:27
+# @Last Modified time: 2021-04-21 18:31:27
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -28,7 +28,7 @@ from bs4 import BeautifulSoup
 
 
 
-def get_urls(lst):
+def build_search_urls(lst):
 	"""
 	This function uses netmums basic URL search which is faster
 	but has less functionality.
@@ -53,22 +53,55 @@ def get_next_pages(urlstring, l = 10):
 	return [urlstring + '/page:' + str(digit) for digit in myrange]
 
 
-def extract_links(html):
+def extract_results(soup):
 	"""
 	TODO
 	extract links from a page of netmums basic search results
 	"""
-	soup = BeautifulSoup(html, 'html.parser')
+	
+	found = soup.find_all('h3', {'class', 'card__title'})
+	if found is not None:
+		#TODO check if blurbs or title wanted
+		links = [link.find('a').get('href') for link in found]
+		captions = [link.find('a').text for link in found]
 
+		#todo write code to get blurb it should be pretty simple i think. use parents?
 
-def getresults(url, rate=0.05, blurbs = False):
+		#create a list of dicts to return and save it to found
+
+	return found
+
+def count_results(soup):
 	"""
-	TODO
-	Returns up to ten pages of results from a basic search query URL
+	Returns the number of results from a search page.
+	"""
+	found = soup.find('p', {'class':'search-results__count'})
 
+	if found is not None:
+		found = int(re.search('\d+\s', found.text))
+
+		return found
+
+def num_pages(soup):
+	"""
+	Returns the number of pages of a basic search query
+	"""
+	found = soup.find('p', {'class':'pagination__count'})
+	if found is not None:
+		found = int(re.search('\d+$', found.text))
+
+	return found
+
+def getresults(url, rate=0.05, blurbs = False, titles = False):
+	"""
+	'url': a single string corresponding to the URL of the
+		   first page of a netmums basic search query
+
+	Returns up to ten pages of results from a basic search query URL
+	Returns a list of dictionaries with attributes
+	'url', 'blurb', 'title' (last two ONLY if specified)
 	Load URL and s... for a singel url
-	Return a list of discussion URLS from the results
-	- need to make sure that if redirected out of /chat just skip
+	
 	default rate limite at 0.05 seconds per reuqest
 
 	"""
@@ -82,7 +115,7 @@ def getresults(url, rate=0.05, blurbs = False):
 	all_htmls = [html] + [requests.get(u).text for u in next_pages]
 
 	#get the results for each URL
-	mylinks = [extract_links(h) for h in all_html]
+	all_result_links = [extract_links(BeautifulSoup(h, 'html.parser')) for h in all_html]
 
 	#using this list/dict get the remaining pages of results
 	#make a list of lists of html corresponding to each original search query url.
