@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 13:18:20
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-21 16:36:56
+# @Last Modified time: 2021-04-21 19:23:58
 
 import scrapehelpers #TODO not sure if this works, maybe just not working in REPL,
 
@@ -20,11 +20,19 @@ query_rq = [requests.post(url).text for url in templ[1:3] if time.sleep(0.05) is
 #def
 #making thing to get links from search result page
 
-soup = BeautifulSoup(query_rq[0], 'html.parser')
+
 
 
 
 #def
 #soup to get the number of results
 
-res = int(re.search('\d+\s', soup.find('p', {'class':'search-results__count'}).text))
+
+
+
+[link.find('a').get('href') for link in soup.find_all('h3', {'class', 'card__title'})]
+
+
+#def
+#get number of pages
+#return none for 1 or fewer pages.

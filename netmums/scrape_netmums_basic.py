@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-21 18:31:27
+# @Last Modified time: 2021-04-21 18:53:29
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -92,7 +92,7 @@ def num_pages(soup):
 
 	return found
 
-def getresults(url, rate=0.05, blurbs = False, titles = False):
+def get_res_from_url(url, rate=0.05, blurbs = False, titles = False):
 	"""
 	'url': a single string corresponding to the URL of the
 		   first page of a netmums basic search query
@@ -125,21 +125,17 @@ def getresults(url, rate=0.05, blurbs = False, titles = False):
 	#blurb stuff
 	all_blurbs = None
 	#return url, number of results, and all the htmls, and datatype that ocntains blurb and user and title.
-	return url, numResults, all_htmls, all_blurbs
+	return dictofurlnumresultsandblubrsandtitles
 
 
 
-#def extract_search_results():
-#	"""
-#
-#	"""
-#	#for a list of list of html, use soup to find the URLs
-#
-#
-#	#also find the text data and combine them all somehow and return that.
-
-# parse the html of our queries results
-query_soups = BeautifulSoup(query_rq, 'html.parser')
+def get_res_from_list(urllist):
+	"""
+	TODO!
+	takes list of urls and performs get_res_from_url on them. 
+	Returns a dict of key=query value = dict of results
+	"""
+	return [get_res_from_url(i) for i in urllist]
 
 
 #NOTE TO DO (MAYBE): 
@@ -150,15 +146,3 @@ query_soups = BeautifulSoup(query_rq, 'html.parser')
 
 
 ############## CRAP
-def GetDates(soup): #this works now, need to check that it works for a larger page.
-    #[todo]check that arg is type bs4.BeautifulSoup
-    dateList = list()
-    for elm in soup.find_all('td',{"class":'basic-title'}):
-        if(type(elm.find('b')) is bs4.element.Tag):
-            tmpdate = elm.find('b').next_sibling
-            if(len(re.findall(r'\w+\s\d+[,]\s\d\d\d\d', tmpdate)) >= 1):
-                tmpdate = re.findall(r'\w+\s\d+[,]\s\d\d\d\d', tmpdate)[0]
-            elif(len(re.findall(r'\w+\s\d+[,]\s\d\d\d\d', tmpdate)) >= 1):
-                tmpdate = re.findall(r'\d\d[/]\d\d[/]\d\d\d\d', tmpdate)[0]
-            dateList.append(tmpdate)
-    return(dateList)
