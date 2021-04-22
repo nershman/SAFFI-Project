@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-21 18:53:29
+# @Last Modified time: 2021-04-22 21:33:30
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -13,6 +13,8 @@ Fore more comprehensive results, using POST headers (and other stuff maybe) is n
 
 import requests
 from bs4 import BeautifulSoup
+import time
+import re
 
 #PLAN 
 #1. create a function to get URLS of searches :)
@@ -42,33 +44,54 @@ def get_next_pages(urlstring, l = 10):
 	"""
 	Returns a lit of string URL with /page:[num] appended for num in 1 to l.
 
-	l: number of pages of results
+	l: number of pages of results (btwn 2 and 10)
+
+	If applying in lambda or list, pass l = None and the function will return None.
 	"""
-	if l > 10 or l < 0:
-		raise Error('l must be between 1 and 10 inclusive')
+	if l is None:
+		num_pages = None
+	elif l > 10 or l < 0:
+		raise InputError('l must be between 1 and 10 inclusive')
 	elif bool(re.search('page:[0-9]',urlstring)):
 		raise Error('do not use URLs with a page number in them')
+
 	else:
-		myrange = range(2,l + 1)
-	return [urlstring + '/page:' + str(digit) for digit in myrange]
+		num_pages = [urlstring + '/page:' + str(digit) for digit in range(2,l + 1)]
+	return num_pages
 
-
-def extract_results(soup):
+def extract_results(soup, blurbs = False, titles = False):
 	"""
 	TODO
 	extract links from a page of netmums basic search results
+
+	right now titles and blurbs options do nothing lol
 	"""
 	
 	found = soup.find_all('h3', {'class', 'card__title'})
 	if found is not None:
 		#TODO check if blurbs or title wanted
 		links = [link.find('a').get('href') for link in found]
-		captions = [link.find('a').text for link in found]
 
-		#todo write code to get blurb it should be pretty simple i think. use parents?
+		if titles:
+			title_text = [link.find('a').text for link in found]
+
+		if blurbs:
+			blurb_text = [link.find_next_sibling(
+				'p', {'class':'card__text'}).text for link in found]
 
 		#create a list of dicts to return and save it to found
-
+		if titles and blurbs:
+			found = [{'link':tup[0],
+					  'title':tup[1],
+					  'blurb':tup[2]} for tup in list(zip(links, title_text, blurb_text))]
+		elif titles:
+			found = [{'link':tup[0],
+					  'title':tup[1]} for tup in list(zip(links,title_text))]
+		elif blurbs:
+			found = [{'link':tup[0],
+					  'blurb':tup[1]} for tup in list(zip(links,blurb_text))]
+		else:
+			found = [{'link':l} for l in links]
 	return found
 
 def count_results(soup):
@@ -78,7 +101,7 @@ def count_results(soup):
 	found = soup.find('p', {'class':'search-results__count'})
 
 	if found is not None:
-		found = int(re.search('\d+\s', found.text))
+		found = int(re.search('\d+\s', found.text).group(0))
 
 		return found
 
@@ -88,7 +111,7 @@ def num_pages(soup):
 	"""
 	found = soup.find('p', {'class':'pagination__count'})
 	if found is not None:
-		found = int(re.search('\d+$', found.text))
+		found = int(re.search('\d+$', found.text).group(0))
 
 	return found
 
@@ -97,45 +120,50 @@ def get_res_from_url(url, rate=0.05, blurbs = False, titles = False):
 	'url': a single string corresponding to the URL of the
 		   first page of a netmums basic search query
 
-	Returns up to ten pages of results from a basic search query URL
-	Returns a list of dictionaries with attributes
-	'url', 'blurb', 'title' (last two ONLY if specified)
-	Load URL and s... for a singel url
-	
-	default rate limite at 0.05 seconds per reuqest
+	Returns up to ten pages of results from a basic search query URL,
+	in the form of a list of dicts with key 'link' and optional attributes
+	'blurbs' and 'titles'
+
+	default rate limit at 0.05 seconds per request
 
 	"""
 	#get the html of a search query
 	html = requests.get(url).text
 
 	#build list of URLS
-	next_pages = get_next_pages(url, get_num_pages(html))
+	next_pages = get_next_pages(url, num_pages(BeautifulSoup(html, 'html.parser')))
 
 	#save all the htmls to a list
-	all_htmls = [html] + [requests.get(u).text for u in next_pages]
+	if next_pages is not None:
+		all_htmls = [html] + [requests.get(u).text for u in next_pages]
+
+	else:
+		all_htmls = [html]
 
 	#get the results for each URL
-	all_result_links = [extract_links(BeautifulSoup(h, 'html.parser')) for h in all_html]
+	#list of lists of dicts, one list of dicts per page.
+	results = [extract_results(BeautifulSoup(h, 'html.parser'),
+								  titles=titles,
+								  blurbs=blurbs
+								  ) for h in all_htmls]
 
-	#using this list/dict get the remaining pages of results
-	#make a list of lists of html corresponding to each original search query url.
+	#flatten the list of lists 
+	results = [item for dictlist in results for item in dictlist]
 
-
-
-	#blurb stuff
-	all_blurbs = None
 	#return url, number of results, and all the htmls, and datatype that ocntains blurb and user and title.
-	return dictofurlnumresultsandblubrsandtitles
+	return results
 
 
-
-def get_res_from_list(urllist):
+#TODO test it.
+def get_res_from_list(urllist, rate = 0.01, urlrate=0.05, blurbs = False, titles = False):
 	"""
-	TODO!
 	takes list of urls and performs get_res_from_url on them. 
-	Returns a dict of key=query value = dict of results
+	Returns a dict of key=queryURL value = list of results
 	"""
-	return [get_res_from_url(i) for i in urllist]
+	return dict(zip(urllist,
+					[get_res_from_url(url, rate=rate, blurbs = blurbs, titles = titles
+						) for url in urllist if time.sleep(rate) is None]
+					))
 
 
 #NOTE TO DO (MAYBE): 

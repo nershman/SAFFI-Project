@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 14:57:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-19 15:14:09
+# @Last Modified time: 2021-04-22 21:09:49
 
 from itertools import product
 
@@ -26,7 +26,8 @@ def make_combo_list(*args, sep=' '):
 	return [sep.join(i) for i in list(product(*args))]
 
 
-problems = ["Chemical contaminants",
+def get_concerns():
+	return ["Chemical contaminants",
 "Endocrine disruptor",
 "preservatives",
 "sweeteners",
@@ -59,7 +60,8 @@ problems = ["Chemical contaminants",
 "Parasites"]
 
 
-foods = [
+def get_foods():
+	return [
 #infant formula
 "formula","baby formula",
 #sterizlized vegetable mixed with fish
