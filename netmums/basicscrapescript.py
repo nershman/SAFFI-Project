@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-22 21:49:56
+# @Last Modified time: 2021-04-29 09:33:58
 
 import scrapehelpers as scr
 import scrape_netmums_basic as netmums
@@ -22,7 +22,7 @@ myurls = netmums.build_search_urls(mylist)
 start = time.time()
 
 
-myresultsdict = netmums.get_res_from_list(myurls, titles=True, blurbs = True)
+myresultsdict = netmums.get_res_from_list(myurls, titles=False, blurbs = False)
 
 end = time.time()
 
