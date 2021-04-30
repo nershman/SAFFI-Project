@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-29 09:33:58
+# @Last Modified time: 2021-04-29 11:31:05
 
 import scrapehelpers as scr
 import scrape_netmums_basic as netmums
@@ -32,6 +32,9 @@ print('execution time: ' + str(end - start), '\nsaving dict to pickle...')
 filehandler = open('basicblurbs.pkl', 'wb')  
 pickle.dump(myresultsdict, filehandler)
 
+
+#change structure so that its a list of dict containing URL, etc. and then theres an added key 'queries' which is a set of query eis was returned in .
+myresultsasURLs = netmums.reorganize_resultsdict(myresultsdict)
 
 
 #my_huge_data_dict = get_posts_from_list(list(myresultsdict.key('url')))

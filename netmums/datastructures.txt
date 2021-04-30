@@ -1,0 +1,31 @@
+search scrape:
+
+{'http': [
+			{'link':str,'title':str,'blurb':str},
+			{'link':str,'title':str,'blurb':str},
+			{'link':str,'title':str,'blurb':str},
+			...
+		 ],
+
+'http:':{...},
+...
+}
+
+reformatted search scrape:
+key is the link url (rather than query!)
+UNFINSHED. hehe
+
+{'str_of_linkurl':		#title attrib gets updated
+		{'title':str,'blurb':str, 'query':(set of http),
+		 'posts':[
+		 				{'author':str, 'likes':str, 'body':str}
+
+		 		 ]
+		}
+
+
+}
+	
+
+
+
