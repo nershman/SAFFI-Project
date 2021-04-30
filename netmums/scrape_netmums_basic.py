@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-29 15:29:45
+# @Last Modified time: 2021-04-30 14:04:31
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -172,6 +172,16 @@ return info from forum threads
 - thread's title [the titles may be truncated in the main pages]
 """
 
+#TODO: check that each URL is a thread before running it.
+#TODO: make the old part remove duplicate URLS or something
+#TODO: convert the old part so that the query URLS are in a set for each resultsList.
+#TODO: now in the new part the list of URLS should be unique??
+#TODO: function to get list of posts from thread
+#TODO: function to get dict of infos from post.
+#TODO: function for getting list of pages from thread.
+#
+
+
 def reorganize_resultsdict(resultsdict):
 
 
@@ -206,14 +216,7 @@ def get_post_body(post_soup):
 		re.compile('DesktopPostCardstyle__PostContent-')}).text
 
 
-#TODO: check that each URL is a thread before running it.
-#TODO: make the old part remove duplicate URLS or something
-#TODO: convert the old part so that the query URLS are in a set for each resultsList.
-#TODO: now in the new part the list of URLS should be unique??
-#TODO: function to get list of posts from thread
-#TODO: function to get dict of infos from post.
-#TODO: function for getting list of pages from thread.
-#
+
 
 
 def from_
