@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:01:45
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-30 11:31:05
+# @Last Modified time: 2021-04-30 15:57:20
 
 #test combo list
 from itertools import repeat, permutations
@@ -62,8 +62,8 @@ for list_of_dict in tempdict:
 
 
 #step 2: flatten to a list of dicts
-templist = [v for k,v in fun.items()]
-#[{'a': 1, 'b': 2, 'c': 3, 'd': 4}, {'a': 4, 'b': 4, 'c': 4, 'd': 4}]
+templist = [dict_ for list_ in tempdict.values() for dict_ in list_]
+
 
 #step 2.5 : edit the URL strings to start at page = 0. (by removing (-[0-9]).html) that group.
 #TODO
@@ -81,16 +81,24 @@ for resultdict in tempdict.values()}
 #ALSO DOESNT WORK:
 
 {resultdict['link']: {
-			'query':{resultdict['query']} | {another_dict['query'] for another_dict in tempdict.values() if another_dict['link'] == resultdict['link']}
+			'query':{resultdict['query']} | {another_dict['query'] for for another_dict in tempdict.values() if another_dict['link'] == resultdict['link']}
 			} \
 for resultlist in tempdict.values() for resultdict in resultlist}
 
 
 
-#list version (works)
+#list version (works) #THIS IS THE ONE WE WILL USE !
 lala = \
 {dict_['link']: {
 			'b':{dict_['b']} | {dictt['b'] for dictt in templist if dictt['a'] == dict_['a']}
+			} \
+for dict_ in templist}
+
+#rewritten for the correct var
+
+lala = \
+{dict_['link']: {
+			'b':{dict_['query']} | {dictt['query'] for dictt in templist if dictt['link'] == dict_['link']}
 			} \
 for dict_ in templist}
 
