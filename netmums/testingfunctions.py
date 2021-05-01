@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:01:45
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-01 17:35:40
+# @Last Modified time: 2021-05-01 17:37:02
 
 #test combo list
 from itertools import repeat, permutations
@@ -70,13 +70,6 @@ def reorganize_resultsdict(resultsdict):
 	for key in mydict.keys(): #for key in dictionary keys
 		for dict_ in mydict[key]: #for dict in list of dict
 			dict_['query'] = key
-	
-	#step 1: delete blurb and title and dont return error if it doesnt exist
-	#(dict.pop is performed in-place)
-	for list_of_dict in tempdict:
-		for dict_ in list_of_dict:
-			dict_.pop('title')
-			dict_.pop('blurb')
 	
 	#step 2: flatten to a list of dicts
 	templist = [dict_ for list_ in tempdict.values() for dict_ in list_]
