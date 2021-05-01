@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:01:45
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-30 15:57:20
+# @Last Modified time: 2021-05-01 17:35:40
 
 #test combo list
 from itertools import repeat, permutations
@@ -42,76 +42,66 @@ tempdict = {'https://www.netmums.com/search/chat/Chemical contaminants formula':
 ###############
 ###
 
-# add the query as an item in EACH dict
-for key in mydict.keys(): #for key in dictionary keys
-	for dict_ in mydict[key]: #for dict in list of dict
-		dict_['query'] = key
+#TODO move to scrape_netmums
+def get_first_page(threadurl):
+	"""
+	Returns the first page of a thread
+	from https://www.netmums.com/coffeehouse/.../.../words-words.html
 
-#???
-#we want to convert it to a dict of key being the link value.
-#but in doing this we will need to check for duplicates along the way.
+	Takes a string or list of strings.
+	"""
+	#NOTE:n netmums puts the thread page in the URL by appended -[number] to the end of the html file.
+	# if a thread's title end with  a number then -a is appended to the end to not 
+	# interfere with the pagination(?). 
+	# EXAMPLE URL: https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/381836-how-much-per-month-feed-family-4-a-3.html
+	if type(threadurl) is str:
+		threadurl = re.sub('-[0-9].html', '.html', threadurl)
+	elif type(threadurl) is list:
+		threadurl = [re.sub('-[0-9].html', '.html', string) for string in threadurl]
+	return threadurl
 
-
-#step 1: delete blurb and title and dont return error if it doesnt exist
-#(dict.pop is performed in-place)
-for list_of_dict in tempdict:
-	for dict_ in list_of_dict:
-		dict_.pop('title')
-		dict_.pop('blurb')
-
-
-
-#step 2: flatten to a list of dicts
-templist = [dict_ for list_ in tempdict.values() for dict_ in list_]
-
-
-#step 2.5 : edit the URL strings to start at page = 0. (by removing (-[0-9]).html) that group.
-#TODO
-
-#step 3:  build a new dict of dict with link as the key, while preserving unique query values across dicts with the same link value.
-#TODO; convert this to porper vars.
-
-#dict version (unfinished)
-{resultdict['link']: {
-			'query':{resultdict['query']} | {another_dict['query'] for another_dict in tempdict.values() if another_dict['link'] == resultdict['link']}
-			} \
-for resultdict in tempdict.values()}
-
-
-#ALSO DOESNT WORK:
-
-{resultdict['link']: {
-			'query':{resultdict['query']} | {another_dict['query'] for for another_dict in tempdict.values() if another_dict['link'] == resultdict['link']}
-			} \
-for resultlist in tempdict.values() for resultdict in resultlist}
-
-
-
-#list version (works) #THIS IS THE ONE WE WILL USE !
-lala = \
-{dict_['link']: {
-			'b':{dict_['b']} | {dictt['b'] for dictt in templist if dictt['a'] == dict_['a']}
-			} \
-for dict_ in templist}
-
-#rewritten for the correct var
-
-lala = \
-{dict_['link']: {
-			'b':{dict_['query']} | {dictt['query'] for dictt in templist if dictt['link'] == dict_['link']}
-			} \
-for dict_ in templist}
+def reorganize_resultsdict(resultsdict):
+	"""
+	Return dict of dict with key from link URL, and a key in the dict
+	for the queries which gave that URL.
+	Also remove link URLs with different page of same thread.
+	"""
+	# add the query as an item in EACH dict
+	for key in mydict.keys(): #for key in dictionary keys
+		for dict_ in mydict[key]: #for dict in list of dict
+			dict_['query'] = key
+	
+	#step 1: delete blurb and title and dont return error if it doesnt exist
+	#(dict.pop is performed in-place)
+	for list_of_dict in tempdict:
+		for dict_ in list_of_dict:
+			dict_.pop('title')
+			dict_.pop('blurb')
+	
+	#step 2: flatten to a list of dicts
+	templist = [dict_ for list_ in tempdict.values() for dict_ in list_]
+	
+	
+	#step 2.5 : edit the URL strings to start at page = 0. (by removing (-[0-9]).html) that group.
+	#TODO
+	for dictionary in templist:
+		dictionary['link'] = get_first_page(dictionary['link'])
+	
+	
+	#step 3:  build a new dict of dict with link as the key, while preserving unique query values across dicts with the same link value.
+	new_dictionary = \
+	{d['link']: { #for each unique link value, make a dict with key query containing a set of all query values
+				'query':{d['query']} | {another_d['query'] for another_d in templist if dictt['link'] == d['link']}
+				} \
+	for d in templist}
 
 
-#ep 3: find dictss with the same value for link.
-#https://stackoverflow.com/questions/20672238/find-dictionary-keys-with-duplicate-values
-for dict_ in templist:
-	for
+
 
 
 #IGNORE THIS DUMB SHIT BELOW STOP BEING WEIRD AND JSUT DO IT MAN LOL LOOK AT LINK ABOVE!
 #for testing:
-templist = [{'a': '1', 'b': '1', 'c': '1', 'd': '1'},
+tempplist = [{'a': '1', 'b': '1', 'c': '1', 'd': '1'},
 {'a': '4', 'b': '4', 'c': '4', 'd': '4'},
 {'a': '1', 'b': '1', 'c': '1', 'd': '1'},
 {'a': '3', 'b': '0', 'c': '2', 'd': '4'},
@@ -162,5 +152,3 @@ for k,v in fun.items():
 #dict comprehension to construct new dict
 {k:v for k,v in fun.items()}
 
-
-def reorganize_resultsdict(resultsdict):
