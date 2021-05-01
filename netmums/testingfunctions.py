@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:01:45
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-01 17:37:02
+# @Last Modified time: 2021-05-01 18:44:51
 
 #test combo list
 from itertools import repeat, permutations
@@ -60,33 +60,37 @@ def get_first_page(threadurl):
 		threadurl = [re.sub('-[0-9].html', '.html', string) for string in threadurl]
 	return threadurl
 
-def reorganize_resultsdict(resultsdict):
+def reorganize_results_dict(results_dict):
 	"""
 	Return dict of dict with key from link URL, and a key in the dict
 	for the queries which gave that URL.
 	Also remove link URLs with different page of same thread.
+
+	Takes: a dictionary object which was built from the function
+	get_res_from_list()
 	"""
-	# add the query as an item in EACH dict
-	for key in mydict.keys(): #for key in dictionary keys
-		for dict_ in mydict[key]: #for dict in list of dict
-			dict_['query'] = key
+
+	# step 1: add the query as an item in EACH dict
+	for key in results_dict.keys(): #for key in dictionary keys
+		for d in results_dict[key]: #for dict in list of dict
+			d['query'] = key
 	
 	#step 2: flatten to a list of dicts
-	templist = [dict_ for list_ in tempdict.values() for dict_ in list_]
-	
+	temp_list_of_dict = [d for each_list in results_dict.values() for d in each_list]
 	
 	#step 2.5 : edit the URL strings to start at page = 0. (by removing (-[0-9]).html) that group.
-	#TODO
-	for dictionary in templist:
-		dictionary['link'] = get_first_page(dictionary['link'])
+	for d in temp_list_of_dict:
+		d['link'] = get_first_page(d['link'])
 	
 	
 	#step 3:  build a new dict of dict with link as the key, while preserving unique query values across dicts with the same link value.
 	new_dictionary = \
 	{d['link']: { #for each unique link value, make a dict with key query containing a set of all query values
-				'query':{d['query']} | {another_d['query'] for another_d in templist if dictt['link'] == d['link']}
+				'query':{d['query']} | {another_d['query'] for another_d in temp_list_of_dict if another_d['link'] == d['link']}
 				} \
-	for d in templist}
+	for d in temp_list_of_dict}
+
+	return new_dictionary
 
 
 

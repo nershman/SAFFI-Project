@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-30 14:04:31
+# @Last Modified time: 2021-05-01 18:45:26
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -182,7 +182,54 @@ return info from forum threads
 #
 
 
-def reorganize_resultsdict(resultsdict):
+def get_first_page(threadurl):
+	"""
+	Returns the first page of a thread
+	from https://www.netmums.com/coffeehouse/.../.../words-words.html
+
+	Takes a string or list of strings.
+	"""
+	#NOTE:n netmums puts the thread page in the URL by appended -[number] to the end of the html file.
+	# if a thread's title end with  a number then -a is appended to the end to not 
+	# interfere with the pagination(?). 
+	# EXAMPLE URL: https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/381836-how-much-per-month-feed-family-4-a-3.html
+	if type(threadurl) is str:
+		threadurl = re.sub('-[0-9].html', '.html', threadurl)
+	elif type(threadurl) is list:
+		threadurl = [re.sub('-[0-9].html', '.html', string) for string in threadurl]
+	return threadurl
+
+def reorganize_results_dict(results_dict):
+	"""
+	Return dict of dict with key from link URL, and a key in the dict
+	for the queries which gave that URL.
+	Also remove link URLs with different page of same thread.
+
+	Takes: a dictionary object which was built from the function
+	get_res_from_list()
+	"""
+
+	# step 1: add the query as an item in EACH dict
+	for key in results_dict.keys(): #for key in dictionary keys
+		for d in results_dict[key]: #for dict in list of dict
+			d['query'] = key
+	
+	#step 2: flatten to a list of dicts
+	temp_list_of_dict = [d for each_list in results_dict.values() for d in each_list]
+	
+	#step 2.5 : edit the URL strings to start at page = 0. (by removing (-[0-9]).html) that group.
+	for d in temp_list_of_dict:
+		d['link'] = get_first_page(d['link'])
+	
+	
+	#step 3:  build a new dict of dict with link as the key, while preserving unique query values across dicts with the same link value.
+	new_dictionary = \
+	{d['link']: { #for each unique link value, make a dict with key query containing a set of all query values
+				'query':{d['query']} | {another_d['query'] for another_d in temp_list_of_dict if another_d['link'] == d['link']}
+				} \
+	for d in temp_list_of_dict}
+
+	return new_dictionary
 
 
 def get_posts_from_thread(thread_soup):
