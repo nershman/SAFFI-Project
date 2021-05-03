@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-01 18:45:26
+# @Last Modified time: 2021-05-03 13:35:26
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -173,13 +173,15 @@ return info from forum threads
 """
 
 #TODO: check that each URL is a thread before running it.
-#TODO: make the old part remove duplicate URLS or something
-#TODO: convert the old part so that the query URLS are in a set for each resultsList.
-#TODO: now in the new part the list of URLS should be unique??
-#TODO: function to get list of posts from thread
+####DONE: make the old part remove duplicate URLS or something
+####DONE: convert the old part so that the query URLS are in a set for each resultsList.
+####DONE: now in the new part the list of URLS should be unique??
+####DONE: function for getting list of pages from thread.
+
+#TODO: function to get list of posts from thread (get_next_pages)
 #TODO: function to get dict of infos from post.
-#TODO: function for getting list of pages from thread.
-#
+#TODO: when getting the list of pages, check that none of them are retunrin erro 404.
+	#get_from_list (or sth): get_soups() check_each_soup() then_run_my_shits()
 
 
 def get_first_page(threadurl):
@@ -231,8 +233,15 @@ def reorganize_results_dict(results_dict):
 
 	return new_dictionary
 
+### POST DATA EXTRACTION ###
+def get_posts_from_thread(threadurl):
+	"""
+	Returns a list of dict where each dict is a post.
 
-def get_posts_from_thread(thread_soup):
+	Takes a thread URL
+	"""
+
+def get_posts_from_page(thread_soup):
 	"""
 	Returns a list of soup objects corresponding to posts.
 	"""
@@ -262,14 +271,64 @@ def get_post_body(post_soup):
 	return post_soup.find('div', {'class': 
 		re.compile('DesktopPostCardstyle__PostContent-')}).text
 
+def extract_post_data(soup):
+	"""
+	Run the other post data extraction functions and return all the data
+	in a dict, or something like that.
+	"""
+	#TODO
+	pass
+
+### EXTRACT FROM THREAD ###
+#works
+def num_pages_in_thread(soup):
+	"""
+	Returns the number of pages in a thread
+	Takes the soup of first page of a forum thread on netmums.com
+	"""
+	#get a list of page numbers shown on the page.
+	#netmums has the first n pages, and then the very last page
+	# (assuming there are so many pages that truncation is necessary)
+	found = soup.find('fieldset', {'class': 
+		re.compile('^ActiveThreadsstyle__')}).find_next_sibling().strings
+
+	numbers = []
+	for string in found:
+		try:
+			numbers.append(int(string))
+		except ValueError:
+			pass
+
+	return max(numbers)
+
+#UNTESTED
+def get_thread_pages(threadurl, num_pages):
+	"""
+	Returns a list of string URL with -[num] appended for num in 1 to num_pages.
+
+	If applying in lambda or list, pass l = None and the function will return None.
+	"""
+
+	if url != str:
+		raise TypeError('list has no values')
+	if num_pages != int:
+		raise TypeError('num_pages must be an integer')
+
+	threadurl = get_first_page(threadurl)
+
+	if num_pages == 1:
+		threadurls = [threadurl]
+	else:
+		threadurls = [threadurl] + [threadurl + '-' + str(digit) for digit in range(2,num_pages)]
+
+	return threadurls
 
 
-
-
-def from_
-
-def get_posts_for_list(urls):
+def get_posts_for_dict(urldict):
 	"""
 	Takes a list of URLS of threads.
 	"""
 
+	#for key in urldict:
+		#urldic[key][posts] = get_posts_from_thread(key)
+		#urldict[key][title] = get entire ttile
