@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-03 13:35:26
+# @Last Modified time: 2021-05-05 15:00:12
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -40,7 +40,7 @@ def build_search_urls(lst):
 
 def get_next_pages(urlstring, l = 10):
 	"""
-	Returns a lit of string URL with /page:[num] appended for num in 1 to l.
+	Returns a list of string URL with /page:[num] appended for num in 1 to l.
 
 	l: number of pages of results (btwn 2 and 10)
 
@@ -59,7 +59,6 @@ def get_next_pages(urlstring, l = 10):
 
 def extract_results(soup, blurbs = False, titles = False):
 	"""
-	TODO
 	extract links from a page of netmums basic search results
 
 	right now titles and blurbs options do nothing lol
@@ -67,7 +66,6 @@ def extract_results(soup, blurbs = False, titles = False):
 	
 	found = soup.find_all('h3', {'class': 'card__title'})
 	if found is not None:
-		#TODO check if blurbs or title wanted
 		links = [link.find('a').get('href') for link in found]
 
 		if titles:
@@ -160,7 +158,7 @@ def get_res_from_list(urllist, rate = 0.01, urlrate=0.05, blurbs = False, titles
 	return dict(zip(urllist,
 					[get_res_from_url(url, rate=rate, blurbs = blurbs, titles = titles
 						) for url in urllist if time.sleep(rate) is None]
-					))
+					))  
 
 
 
@@ -172,14 +170,8 @@ return info from forum threads
 - thread's title [the titles may be truncated in the main pages]
 """
 
-#TODO: check that each URL is a thread before running it.
-####DONE: make the old part remove duplicate URLS or something
-####DONE: convert the old part so that the query URLS are in a set for each resultsList.
-####DONE: now in the new part the list of URLS should be unique??
-####DONE: function for getting list of pages from thread.
 
-#TODO: function to get list of posts from thread (get_next_pages)
-#TODO: function to get dict of infos from post.
+#TODO: check that each URL is a thread before running it.
 #TODO: when getting the list of pages, check that none of them are retunrin erro 404.
 	#get_from_list (or sth): get_soups() check_each_soup() then_run_my_shits()
 
@@ -201,7 +193,7 @@ def get_first_page(threadurl):
 		threadurl = [re.sub('-[0-9].html', '.html', string) for string in threadurl]
 	return threadurl
 
-def reorganize_results_dict(results_dict):
+def resultsdict_to_urldict(results_dict):
 	"""
 	Return dict of dict with key from link URL, and a key in the dict
 	for the queries which gave that URL.
@@ -234,12 +226,6 @@ def reorganize_results_dict(results_dict):
 	return new_dictionary
 
 ### POST DATA EXTRACTION ###
-def get_posts_from_thread(threadurl):
-	"""
-	Returns a list of dict where each dict is a post.
-
-	Takes a thread URL
-	"""
 
 def get_posts_from_page(thread_soup):
 	"""
@@ -251,7 +237,6 @@ def get_posts_from_page(thread_soup):
 def get_post_date(post_soup):
 	return post_soup.find('div', {'class': 
 		re.compile('DesktopPostCardHeaderstyle__PostDate-')}).text
-
 
 def get_post_likes(post_soup):
 	"""
@@ -270,16 +255,37 @@ def get_post_username(post_soup):
 def get_post_body(post_soup):
 	return post_soup.find('div', {'class': 
 		re.compile('DesktopPostCardstyle__PostContent-')}).text
-
-def extract_post_data(soup):
+#UNTESTED
+def extract_post(post_soup):
 	"""
+	takes a single post soup object
+	"""
+	post_dict = {'username': get_post_username(post_soup),
+				'likes': get_post_likes(post_soup),
+				'date': get_post_date(post_soup),
+				'body': get_post_body(post_soup)}
+	return post_dict
+#UNTESTED
+def extract_posts_from_page(thread_soup):
+	"""
+	Returns a list of dicts, one for each post on teh page
+
 	Run the other post data extraction functions and return all the data
 	in a dict, or something like that.
+
+	Takes a list of posts, from get_posts_from_page()
 	"""
-	#TODO
-	pass
+	return [extract_post(post) for post in get_posts_from_page(thread_soup)]
 
 ### EXTRACT FROM THREAD ###
+def get_thread_title(thread_soup):
+	"""
+	Get title of a thread soup object
+	Returns a string.
+	"""
+	return thread_soup.find('div', {'class': 
+		re.compile('__ThreadTitle-')}).text
+
 #works
 def num_pages_in_thread(soup):
 	"""
@@ -301,34 +307,71 @@ def num_pages_in_thread(soup):
 
 	return max(numbers)
 
-#UNTESTED
-def get_thread_pages(threadurl, num_pages):
+#WORKS
+def get_next_thread_pages(threadurl, num_pages):
 	"""
+	#TODO: UPDATE DESCRIPTION
 	Returns a list of string URL with -[num] appended for num in 1 to num_pages.
 
 	If applying in lambda or list, pass l = None and the function will return None.
 	"""
 
-	if url != str:
+	if type(threadurl) is not str:
 		raise TypeError('list has no values')
-	if num_pages != int:
+	if type(num_pages) is not int:
 		raise TypeError('num_pages must be an integer')
 
 	threadurl = get_first_page(threadurl)
 
 	if num_pages == 1:
-		threadurls = [threadurl]
+		threadurls = None
 	else:
-		threadurls = [threadurl] + [threadurl + '-' + str(digit) for digit in range(2,num_pages)]
+		threadurls = [threadurl + '-' + str(digit) for digit in range(2,num_pages+1)]
 
 	return threadurls
-
-
-def get_posts_for_dict(urldict):
+#UNTESTED
+def get_thread_data(threadurl):
 	"""
-	Takes a list of URLS of threads.
-	"""
+	Returns a tuple, containing thread title and a list of dicts.
 
-	#for key in urldict:
-		#urldic[key][posts] = get_posts_from_thread(key)
-		#urldict[key][title] = get entire ttile
+	Get all the posts from an entire thread.
+
+	Takes a thread URL
+	"""
+	#basic error check
+	if type(threadurl) is not str:
+		raise TypeError('threadurl must be a string')
+	#1: build first soup and use it to get number of pages
+	first_soup = BeautifulSoup(requests.get(threadurl, 'html.parser'))
+	page_num = num_pages_in_thread(first_soup)
+	#get title.
+	title = get_thread_title(posts)
+	#2: build remaining pages soups and concat to list
+	all_pages = [first_soup] + get_next_thread_pages(threadurl, page_num)
+	#3 iterate through the soups gathering all the info.
+
+	flat_list = [post for page in all_pages \
+					for list_of_post in extract_posts_from_page(page) \
+					for post in list_of_post]
+
+	return title, flat_list
+
+
+
+### FINISHING TOUCHES ####
+#UNTESTED
+def fill_urldict(url_dict):
+	"""
+	for each key in urldict, fill it.
+	"""
+	for key in url_dict:
+		url_dict[key]['title'], url_dict[key]['posts'] = get_thread_data(key)
+
+	return url_dict
+#UNTESTED
+def get_posts_from_resultsdict(results_dict):
+	"""
+	Returns URLDict filled with posts.
+	Takes ResultsDict
+	"""
+	return fill_urldict(resultsdict_to_urldict(results_dict))
