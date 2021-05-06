@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-05 15:00:12
+# @Last Modified time: 2021-05-06 13:49:11
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -15,18 +15,18 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import re
+
+#setup requests session.
+s = requests.Session()
+a = requests.adapters.HTTPAdapter(max_retries=7)
+s.mount('http://', a)
+s.mount('https://', a)
+
 #NOTE TO DO (MAYBE): 
 # the queries only gather a limited number (100 = 10 res x 10 pages) of results
 # so for now I would like to just save the number of results returned as well
 # which could make it easier to figure out later.
 # PHP quereis seem to be way slower (https://www.netmums.com/coffeehouse/search_result.php?config=work-692.inc)
-
-
-#PLAN 
-
-#5. make functions to scrape info from thread pages.
-
-
 
 def build_search_urls(lst):
 	"""
@@ -124,14 +124,14 @@ def get_res_from_url(url, rate=0.05, blurbs = False, titles = False):
 
 	"""
 	#get the html of a search query
-	html = requests.get(url).text
+	html = s.get(url).text
 
 	#build list of URLS
 	next_pages = get_next_pages(url, num_pages(BeautifulSoup(html, 'html.parser')))
 
 	#save all the htmls to a list
 	if next_pages is not None:
-		all_htmls = [html] + [requests.get(u).text for u in next_pages]
+		all_htmls = [html] + [s.get(u).text for u in next_pages]
 
 	else:
 		all_htmls = [html]
@@ -170,7 +170,7 @@ return info from forum threads
 - thread's title [the titles may be truncated in the main pages]
 """
 
-
+#FIXME: need to accomodate 502 bad gateway requests.
 #TODO: check that each URL is a thread before running it.
 #TODO: when getting the list of pages, check that none of them are retunrin erro 404.
 	#get_from_list (or sth): get_soups() check_each_soup() then_run_my_shits()
@@ -198,6 +198,7 @@ def resultsdict_to_urldict(results_dict):
 	Return dict of dict with key from link URL, and a key in the dict
 	for the queries which gave that URL.
 	Also remove link URLs with different page of same thread.
+	Also remove URLs which arent corresponding to a chat page (not of form https://www.netmums.com/coffeehouse/*)		
 
 	Takes: a dictionary object which was built from the function
 	get_res_from_list()
@@ -222,6 +223,15 @@ def resultsdict_to_urldict(results_dict):
 				'query':{d['query']} | {another_d['query'] for another_d in temp_list_of_dict if another_d['link'] == d['link']}
 				} \
 	for d in temp_list_of_dict}
+
+	#step 4:  remove non-chat results.
+	badkeys = []
+	for key in new_dictionary.keys():
+		if 'netmums.com/coffeehouse' not in key:
+			badkeys.append(key)
+			#print(key)#DEBUG
+	for key in badkeys:
+		new_dictionary.pop(key)
 
 	return new_dictionary
 
@@ -283,11 +293,14 @@ def get_thread_title(thread_soup):
 	Get title of a thread soup object
 	Returns a string.
 	"""
-	return thread_soup.find('div', {'class': 
+	return thread_soup.find('h1', {'class': 
 		re.compile('__ThreadTitle-')}).text
 
 #works
 def num_pages_in_thread(soup):
+	global globalvar #DEBUG
+	#FIXME: sometimes this soup.find(re.comile..) returns None.
+	globalvar = soup
 	"""
 	Returns the number of pages in a thread
 	Takes the soup of first page of a forum thread on netmums.com
@@ -295,8 +308,8 @@ def num_pages_in_thread(soup):
 	#get a list of page numbers shown on the page.
 	#netmums has the first n pages, and then the very last page
 	# (assuming there are so many pages that truncation is necessary)
-	found = soup.find('fieldset', {'class': 
-		re.compile('^ActiveThreadsstyle__')}).find_next_sibling().strings
+	found = soup.find('div', {'class': 
+		re.compile('sc-egg')}).strings
 
 	numbers = []
 	for string in found:
@@ -329,8 +342,8 @@ def get_next_thread_pages(threadurl, num_pages):
 		threadurls = [threadurl + '-' + str(digit) for digit in range(2,num_pages+1)]
 
 	return threadurls
-#UNTESTED
-def get_thread_data(threadurl):
+#WORKS
+def get_thread_data(threadurl, rate=0.01):
 	"""
 	Returns a tuple, containing thread title and a list of dicts.
 
@@ -341,18 +354,23 @@ def get_thread_data(threadurl):
 	#basic error check
 	if type(threadurl) is not str:
 		raise TypeError('threadurl must be a string')
-	#1: build first soup and use it to get number of pages
-	first_soup = BeautifulSoup(requests.get(threadurl, 'html.parser'))
+	print(threadurl)#DEBUG
+	#build first soup and use it to get number of pages
+	first_soup = BeautifulSoup(s.get(threadurl).text, 'html.parser')
 	page_num = num_pages_in_thread(first_soup)
 	#get title.
-	title = get_thread_title(posts)
-	#2: build remaining pages soups and concat to list
-	all_pages = [first_soup] + get_next_thread_pages(threadurl, page_num)
-	#3 iterate through the soups gathering all the info.
+	title = get_thread_title(first_soup)
+	#build remaining pages soups and concat to list
+	if page_num == 1:
+		all_pages = [first_soup]
+	else:
+		all_pages = [first_soup] + [BeautifulSoup(s.get(page).text) \
+				 					for page in get_next_thread_pages(threadurl, page_num) \
+				 					if time.sleep(rate) is None]
 
+	#iterate through the soups gathering all the info. (also flattening list)
 	flat_list = [post for page in all_pages \
-					for list_of_post in extract_posts_from_page(page) \
-					for post in list_of_post]
+					for post in extract_posts_from_page(page)]
 
 	return title, flat_list
 
@@ -360,7 +378,7 @@ def get_thread_data(threadurl):
 
 ### FINISHING TOUCHES ####
 #UNTESTED
-def fill_urldict(url_dict):
+def fill_urldict(url_dict): #FIXME add sleep timer between requests.
 	"""
 	for each key in urldict, fill it.
 	"""
