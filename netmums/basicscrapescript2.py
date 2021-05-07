@@ -2,37 +2,37 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 11:38:23
+# @Last Modified time: 2021-05-07 11:41:48
 
 import scrapehelpers as scr
 import scrape_netmums_basic as netmums
 import pickle 
 import time #not necessary but convenient
 
-foods = scr.get_foods()
-concerns = scr.get_concerns()
+#foods = scr.get_foods()
+#concerns = scr.get_concerns()
 
 
-mylist = scr.make_combo_list(concerns, foods)
+#mylist = scr.make_combo_list(concerns, foods)
 
-myurls = netmums.build_search_urls(mylist)
+#myurls = netmums.build_search_urls(mylist)
 
 netmums.debug_requests_on()
 
-start = time.time()
+#start = time.time()
+#
+#
+#myresultsdict = netmums.get_res_from_list(myurls, titles=False, blurbs = False)
+#
+#end = time.time()
+#
+#print('execution time: ' + str(end - start), '\nsaving dict to pickle...')
+##save it..
+#
+#filehandler = open('basicblurbs2.pkl', 'wb')  
+#pickle.dump(myresultsdict, filehandler)
 
-
-myresultsdict = netmums.get_res_from_list(myurls, titles=False, blurbs = False)
-
-end = time.time()
-
-print('execution time: ' + str(end - start), '\nsaving dict to pickle...')
-#save it..
-
-filehandler = open('basicblurbs2.pkl', 'wb')  
-pickle.dump(myresultsdict, filehandler)
-
-
+myresultsdict = pickle.load(open('basicblurbs2.pkl','rb'))
 #change structure so that its a list of dict containing URL, etc. and then theres an added key 'queries' which is a set of query eis was returned in .
 start = time.time()
 final_data = netmums.get_posts_from_resultsdict(myresultsdict)

@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:01:45
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-05 18:45:54
+# @Last Modified time: 2021-05-07 08:38:12
 
 #test combo list
 from itertools import repeat, permutations
@@ -44,18 +44,12 @@ tempdict = {'https://www.netmums.com/search/chat/Chemical contaminants formula':
 
 #testing the final function...
 #subset of dictionary
-tempdict = {key:mydict[key] for key in list(mydict.keys())[0:2]}
+tempdict = {key:mydict[key] for key in list(mydict.keys())[0:8]}
 
 temp = get_posts_from_resultsdict(tempdict)
-#Traceback (most recent call last):
-#  File "<stdin>", line 1, in <module>
-#  File "<string>", line 378, in get_posts_from_resultsdict
-#  File "<string>", line 369, in fill_urldict
-#  File "<string>", line 14, in get_thread_data
-#  File "<string>", line 298, in num_pages_in_thread
-#AttributeError: 'NoneType' object has no attribute 'find_next_sibling'
 
-
+globalvar.find('fieldset', {'class': 
+		re.compile('^ActiveThreadsstyle__')}).find_next_sibling().strings
 
 #IGNORE THIS DUMB SHIT BELOW STOP BEING WEIRD AND JSUT DO IT MAN LOL LOOK AT LINK ABOVE!
 #for testing:

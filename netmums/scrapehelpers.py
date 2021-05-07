@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 14:57:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-04-22 21:09:49
+# @Last Modified time: 2021-05-07 09:37:20
 
 from itertools import product
 
@@ -28,47 +28,91 @@ def make_combo_list(*args, sep=' '):
 
 def get_concerns():
 	return ["Chemical contaminants",
+#ENDOCRINE DISRUPTOR
 "Endocrine disruptor",
+"endocrine",#end
+#FOOD PRESERVATIVES, SWEETENERS AND ADDITIVES
 "preservatives",
 "sweeteners",
-"additives",
+"additives", #end
 "Pesticides",
+#VETERINARY DRUGS
 "Veterinary drugs",
+"animal drugs",
+"vet drugs", #end
+#GMO
 "GMO",
+"GM",
+"genetically modified",#end
 "Metals",
 "Mycotoxin",
+#BISPHENOL A
 "Bisphenol A",
-"Furan and furan-like molecules",
-"DON",
-"Dioxin and PCB",
+"BPA", #end
+#FURAN - removed because nothing related to this returns results
+#DON (note that this acronym nobody uses and all results are from words like "don't")
+"deoxynivalenol",
+"vomitoxin",#end
+#DIOXIN AND PCB
+"Dioxin",
+"PCB",
+"biphenyls",#end
+#MOH
 "MOH",
-"Mineral oil hydrocarbons",
-"MOSH",
+"hydrocarbons",
+"saturdated hydrocarbons",
 "MOAH",
+"aromatic hydrocarbons",#end
 "Nitrates",
+#ACRYLAMID
 "Acrylamid",
-"Phtalates",
+"Acrylamide",
+"phthalates",
+#MICROBIOLOGIC CONTAMINANTS
 "Microbiologic contaminants",
+"bacteria",
+"spores",
+"mold",
+"mould",
+"virus",
+"microbes",
+"contaminated",#end
 "Salmonella",
 "Campylobacter",
 "Listeria",
+#ECOLI
 "EColi",
+"E-coli", #end
 "Cronobacter",
 "Histamine",
-"Other bacteria",
+#other bacteria
+"bacteria",#end
 "Virus",
-"Parasites"]
+"Parasites",
+#UNRELATED BUT MAYBE USEFUL?
+"carcinogen",
+"chemicals", 
+"toxic", 
+"toxin", 
+"poisonous", 
+"fungus", 
+"food poisoning", 
+"hazard"]
 
 
 def get_foods():
 	return [
 #infant formula
-"formula","baby formula",
+"formula","baby formula", "bottle-fed", "bottle",
 #sterizlized vegetable mixed with fish
 "veggie baby food","vegetable baby food",
+"veg puree", "veg purée",
 #fresh fruit puree mildly processed
-"fruit puree","fruit baby food",
+"fruit puree","fruit baby food", "fruit purée", "applesauce",
 #infant cereals
-"cereal for baby", "cereal"]
+"cereal for baby", "cereal", "porridge", "oats", "oatmeal",
+#other
+"jar food", "baby food", "jarred", "premade food", "puree", "purée", "jarred food"
+,"yoghurt", "pudding"]
 
 

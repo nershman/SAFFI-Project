@@ -16,7 +16,7 @@ key is the link url (rather than query!)
 UNFINSHED. hehe
 
 {'str_of_linkurl':		#title attrib gets updated
-		{'title':str,'query':(set of http),
+		{'title':str, 'query':(set of http),
 		 'posts':[
 		 				{'author':str, 'likes':str, 'body':str}
 

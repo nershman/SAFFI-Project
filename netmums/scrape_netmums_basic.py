@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-06 13:49:11
+# @Last Modified time: 2021-05-07 13:46:58
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -15,12 +15,38 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import re
-
+import logging
+import contextlib
+from http.client import HTTPConnection
+## SETUP ##
 #setup requests session.
 s = requests.Session()
 a = requests.adapters.HTTPAdapter(max_retries=7)
 s.mount('http://', a)
 s.mount('https://', a)
+tout = 90
+
+def debug_requests_on():
+    '''Switches on logging of the requests module.'''
+    HTTPConnection.debuglevel = 1
+
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.DEBUG)
+    requests_log.propagate = True
+
+def debug_requests_off():
+    '''Switches off logging of the requests module, might be some side-effects'''
+    HTTPConnection.debuglevel = 0
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.WARNING)
+    root_logger.handlers = []
+    requests_log = logging.getLogger("requests.packages.urllib3")
+    requests_log.setLevel(logging.WARNING)
+    requests_log.propagate = False
+
 
 #NOTE TO DO (MAYBE): 
 # the queries only gather a limited number (100 = 10 res x 10 pages) of results
@@ -124,14 +150,14 @@ def get_res_from_url(url, rate=0.05, blurbs = False, titles = False):
 
 	"""
 	#get the html of a search query
-	html = s.get(url).text
+	html = s.get(url, timeout=tout).text
 
 	#build list of URLS
 	next_pages = get_next_pages(url, num_pages(BeautifulSoup(html, 'html.parser')))
 
 	#save all the htmls to a list
 	if next_pages is not None:
-		all_htmls = [html] + [s.get(u).text for u in next_pages]
+		all_htmls = [html] + [s.get(u, timeout=tout).text for u in next_pages]
 
 	else:
 		all_htmls = [html]
@@ -145,7 +171,7 @@ def get_res_from_url(url, rate=0.05, blurbs = False, titles = False):
 
 	#flatten the list of lists 
 	results = [item for dictlist in results for item in dictlist]
-
+	print(url)#DEBUG
 	#return url, number of results, and all the htmls, and datatype that ocntains blurb and user and title.
 	return results
 
@@ -170,10 +196,7 @@ return info from forum threads
 - thread's title [the titles may be truncated in the main pages]
 """
 
-#FIXME: need to accomodate 502 bad gateway requests.
 #TODO: check that each URL is a thread before running it.
-#TODO: when getting the list of pages, check that none of them are retunrin erro 404.
-	#get_from_list (or sth): get_soups() check_each_soup() then_run_my_shits()
 
 
 def get_first_page(threadurl):
@@ -229,6 +252,8 @@ def resultsdict_to_urldict(results_dict):
 	for key in new_dictionary.keys():
 		if 'netmums.com/coffeehouse' not in key:
 			badkeys.append(key)
+		if '.html' not in key:
+			badkeys.append(key)
 			#print(key)#DEBUG
 	for key in badkeys:
 		new_dictionary.pop(key)
@@ -275,7 +300,7 @@ def extract_post(post_soup):
 				'date': get_post_date(post_soup),
 				'body': get_post_body(post_soup)}
 	return post_dict
-#UNTESTED
+
 def extract_posts_from_page(thread_soup):
 	"""
 	Returns a list of dicts, one for each post on teh page
@@ -299,8 +324,7 @@ def get_thread_title(thread_soup):
 #works
 def num_pages_in_thread(soup):
 	global globalvar #DEBUG
-	#FIXME: sometimes this soup.find(re.comile..) returns None.
-	globalvar = soup
+	globalvar = soup #DEBUG
 	"""
 	Returns the number of pages in a thread
 	Takes the soup of first page of a forum thread on netmums.com
@@ -309,7 +333,11 @@ def num_pages_in_thread(soup):
 	#netmums has the first n pages, and then the very last page
 	# (assuming there are so many pages that truncation is necessary)
 	found = soup.find('div', {'class': 
-		re.compile('sc-egg')}).strings
+		re.compile('sc-egg')})
+	if found is not None:
+		found = found.strings
+	else:
+		found = [None]
 
 	numbers = []
 	for string in found:
@@ -328,7 +356,7 @@ def get_next_thread_pages(threadurl, num_pages):
 
 	If applying in lambda or list, pass l = None and the function will return None.
 	"""
-
+	#TODO return error if '.html' is not found.
 	if type(threadurl) is not str:
 		raise TypeError('list has no values')
 	if type(num_pages) is not int:
@@ -339,7 +367,7 @@ def get_next_thread_pages(threadurl, num_pages):
 	if num_pages == 1:
 		threadurls = None
 	else:
-		threadurls = [threadurl + '-' + str(digit) for digit in range(2,num_pages+1)]
+		threadurls = [re.sub('.html','-'+str(digit)+'.html',threadurl) for digit in range(2,num_pages+1)]
 
 	return threadurls
 #WORKS
@@ -351,26 +379,36 @@ def get_thread_data(threadurl, rate=0.01):
 
 	Takes a thread URL
 	"""
+	bad_page=False
 	#basic error check
 	if type(threadurl) is not str:
 		raise TypeError('threadurl must be a string')
 	print(threadurl)#DEBUG
 	#build first soup and use it to get number of pages
-	first_soup = BeautifulSoup(s.get(threadurl).text, 'html.parser')
+	first_soup = BeautifulSoup(s.get(threadurl, timeout=tout).text, 'html.parser')
 	page_num = num_pages_in_thread(first_soup)
-	#get title.
-	title = get_thread_title(first_soup)
-	#build remaining pages soups and concat to list
-	if page_num == 1:
-		all_pages = [first_soup]
-	else:
-		all_pages = [first_soup] + [BeautifulSoup(s.get(page).text) \
-				 					for page in get_next_thread_pages(threadurl, page_num) \
-				 					if time.sleep(rate) is None]
+	#error checking: we jsut return blank if the URL didnt have page numbers
+	if page_num is None:
+		bad_page == True
 
-	#iterate through the soups gathering all the info. (also flattening list)
-	flat_list = [post for page in all_pages \
-					for post in extract_posts_from_page(page)]
+	if bad_page == False:
+		#get title.
+		title = get_thread_title(first_soup)
+		#build remaining pages soups and concat to list
+		if page_num == 1:
+			all_pages = [first_soup]
+		else:
+			all_pages = [first_soup] + [BeautifulSoup(s.get(page, timeout=tout).text) \
+					 					for page in get_next_thread_pages(threadurl, page_num) \
+					 					if time.sleep(rate) is None]
+	
+		#iterate through the soups gathering all the info. (also flattening list)
+		flat_list = [post for page in all_pages \
+						for post in extract_posts_from_page(page)]
+	else:
+		#if the URL was bad return an empty list and a title mentioning error.
+		title = 'SCRAPE_ERROR: IRRELEVANT PAGE'
+		flat_list=[]
 
 	return title, flat_list
 
@@ -378,12 +416,13 @@ def get_thread_data(threadurl, rate=0.01):
 
 ### FINISHING TOUCHES ####
 #UNTESTED
-def fill_urldict(url_dict): #FIXME add sleep timer between requests.
+def fill_urldict(url_dict, rate = 0.063): #FIXME add sleep timer between requests.
 	"""
 	for each key in urldict, fill it.
 	"""
 	for key in url_dict:
 		url_dict[key]['title'], url_dict[key]['posts'] = get_thread_data(key)
+		time.sleep(rate)
 
 	return url_dict
 #UNTESTED
