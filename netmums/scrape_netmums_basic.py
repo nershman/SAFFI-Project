@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 13:46:58
+# @Last Modified time: 2021-05-07 15:42:59
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -18,10 +18,12 @@ import re
 import logging
 import contextlib
 from http.client import HTTPConnection
+from requests.packages.urllib3.util.retry import Retry
 ## SETUP ##
 #setup requests session.
 s = requests.Session()
-a = requests.adapters.HTTPAdapter(max_retries=7)
+retries=Retry(total=7, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+a = requests.adapters.HTTPAdapter(max_retries=retries)
 s.mount('http://', a)
 s.mount('https://', a)
 tout = 90
@@ -255,7 +257,7 @@ def resultsdict_to_urldict(results_dict):
 		if '.html' not in key:
 			badkeys.append(key)
 			#print(key)#DEBUG
-	for key in badkeys:
+	for key in set(badkeys):
 		new_dictionary.pop(key)
 
 	return new_dictionary
@@ -337,7 +339,7 @@ def num_pages_in_thread(soup):
 	if found is not None:
 		found = found.strings
 	else:
-		found = [None]
+		found = [0]
 
 	numbers = []
 	for string in found:
@@ -388,7 +390,7 @@ def get_thread_data(threadurl, rate=0.01):
 	first_soup = BeautifulSoup(s.get(threadurl, timeout=tout).text, 'html.parser')
 	page_num = num_pages_in_thread(first_soup)
 	#error checking: we jsut return blank if the URL didnt have page numbers
-	if page_num is None:
+	if page_num == 0:
 		bad_page == True
 
 	if bad_page == False:
