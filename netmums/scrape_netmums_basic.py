@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 15:42:59
+# @Last Modified time: 2021-05-07 20:27:08
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -22,7 +22,7 @@ from requests.packages.urllib3.util.retry import Retry
 ## SETUP ##
 #setup requests session.
 s = requests.Session()
-retries=Retry(total=7, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+retries=Retry(total=7, backoff_factor=1, status_forcelist=[ 500, 501, 502, 503, 504, 505, 506])
 a = requests.adapters.HTTPAdapter(max_retries=retries)
 s.mount('http://', a)
 s.mount('https://', a)
@@ -391,7 +391,7 @@ def get_thread_data(threadurl, rate=0.01):
 	page_num = num_pages_in_thread(first_soup)
 	#error checking: we jsut return blank if the URL didnt have page numbers
 	if page_num == 0:
-		bad_page == True
+		bad_page = True
 
 	if bad_page == False:
 		#get title.
@@ -400,6 +400,8 @@ def get_thread_data(threadurl, rate=0.01):
 		if page_num == 1:
 			all_pages = [first_soup]
 		else:
+			#FIXME TODO: add check here where if the page get doesnt work then it returns a dict with the page number
+			#or sth...
 			all_pages = [first_soup] + [BeautifulSoup(s.get(page, timeout=tout).text) \
 					 					for page in get_next_thread_pages(threadurl, page_num) \
 					 					if time.sleep(rate) is None]

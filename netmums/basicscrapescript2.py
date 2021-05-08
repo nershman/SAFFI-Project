@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 11:41:48
+# @Last Modified time: 2021-05-08 09:16:10
 
 import scrapehelpers as scr
 import scrape_netmums_basic as netmums
@@ -41,5 +41,6 @@ print('execution time: ' + str(end - start), '\nsaving dict to pickle...')
 
 filehandler = open('allposts.pkl', 'wb')  
 pickle.dump(final_data, filehandler)
+filehandler.close() #!prevent EOFError when loading pickle
 #my_huge_data_dict = get_posts_from_list(list(myresultsdict.key('url')))
 #data dict will contain post content, username, title...
