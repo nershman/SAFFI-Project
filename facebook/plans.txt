@@ -1,0 +1,46 @@
+#various notes for implementing facebook scrapoer stuff
+
+
+#############
+# facebook scraper#
+##################
+
+
+- i need to have cookies on to get comments 
+
+code for properly getting all comments:
+
+from facebook_scraper import *
+import time
+
+start = time.time()
+posts = list(get_posts(
+    post_urls=["https://m.facebook.com/story.php?story_fbid=1517650235239786&id=144655535872603"],
+    cookies="cookies.txt",
+    options={"comments":500}
+))
+print(f"{len(posts[0].get('comments_full'))} comments extracted in {round(time.time() - start)}s")
+
+#to get stuff from exact posts:
+https://github.com/kevinzg/facebook-scraper/issues/207
+
+
+
+#RAnDOM SHIT
+pprint - might make my life easier. prints data in organized way.
+
+
+EXAMPLE OF HOW TO INSTALL DIRECTLY FROM GITHUB INSTEAD OF THRU PIP:
+
+virtualenv --python python3 env
+source env/bin/activate
+pip install GoogleScraper
+
+Right now (September 2018) this is discouraged. Please install from latest Github sources.
+Alternatively install directly from Github
+
+Sometimes the newest and most awesome stuff is not available in the cheeseshop (That's how they call https://pypi.python.org/pypi/pip). Therefore you maybe want to install GoogleScraper from the latest source that resides in this Github repository. You can do so like this:
+
+virtualenv --python python3 env
+source env/bin/activate
+pip install git+git://github.com/NikolaiT/GoogleScraper/
