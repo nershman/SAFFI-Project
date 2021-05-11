@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 14:57:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 09:37:20
+# @Last Modified time: 2021-05-11 17:50:00
 
 from itertools import product
 
@@ -30,7 +30,8 @@ def get_concerns():
 	return ["Chemical contaminants",
 #ENDOCRINE DISRUPTOR
 "Endocrine disruptor",
-"endocrine",#end
+"endocrine",
+"estrogen",#end
 #FOOD PRESERVATIVES, SWEETENERS AND ADDITIVES
 "preservatives",
 "sweeteners",
@@ -60,7 +61,7 @@ def get_concerns():
 #MOH
 "MOH",
 "hydrocarbons",
-"saturdated hydrocarbons",
+"saturated hydrocarbons",
 "MOAH",
 "aromatic hydrocarbons",#end
 "Nitrates",
@@ -97,7 +98,9 @@ def get_concerns():
 "poisonous", 
 "fungus", 
 "food poisoning", 
-"hazard"]
+"hazard",
+"EFSA",
+"European Food Safety Authority"]
 
 
 def get_foods():
