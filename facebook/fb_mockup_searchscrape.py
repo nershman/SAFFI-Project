@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-11 13:00:46
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-11 15:07:58
+# @Last Modified time: 2021-05-11 15:21:03
 
 """
 First Approach:
@@ -11,6 +11,8 @@ First Approach:
 2) feed post URLs into facebook scraper
 	- goals: keep query source as previously w netmums scrape.
 """
+import os #DEBUG
+os.chdir('/Users/sma/Documents/INRAE internship/scrape-git/facebook') #DEBUG
 
 from search_engines import Google
 import facebook_scraper as fs
