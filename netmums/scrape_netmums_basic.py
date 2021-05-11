@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-07 20:27:08
+# @Last Modified time: 2021-05-11 21:59:49
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -419,7 +419,7 @@ def get_thread_data(threadurl, rate=0.01):
 
 
 ### FINISHING TOUCHES ####
-#UNTESTED
+
 def fill_urldict(url_dict, rate = 0.063): #FIXME add sleep timer between requests.
 	"""
 	for each key in urldict, fill it.
@@ -429,7 +429,7 @@ def fill_urldict(url_dict, rate = 0.063): #FIXME add sleep timer between request
 		time.sleep(rate)
 
 	return url_dict
-#UNTESTED
+
 def get_posts_from_resultsdict(results_dict):
 	"""
 	Returns URLDict filled with posts.
