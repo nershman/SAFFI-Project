@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-11 13:00:46
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-14 11:35:34
+# @Last Modified time: 2021-05-14 13:54:08
 
 """
 First Approach:
@@ -124,3 +124,14 @@ for url in pages:
 #TODO: make sure that we collect comments on posts.
 
 #save to pkl
+
+
+
+
+#########
+
+#my facebook options.
+my_fb_options={"posts_per_page": 200, "comments":True, "reactors": True}
+
+pages = 10
+timeout = 45
