@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-16 16:08:44
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-16 17:39:37
+# @Last Modified time: 2021-05-16 18:45:33
 """
 This script takes a path of a directory containing html pages of google results,
 with a format where the name is a two digit or one digit number.
@@ -67,9 +67,12 @@ search_queries = scr.make_combo_list(['site:en-gb.facebook.com/*/posts/ OR site:
 									  hazards, [products])
 
 #rename keys based on teh value in the list
-for number in results_dict.keys():
+temp_keys = list(results_dict.keys())
+for number in temp_keys:
 	results_dict[search_queries[int(number) - 1]] = results_dict.pop(number)
 
+#conver tto proper results_dict form
+results_dict = { key:[{'link': url} for url in list_of_url] for key, list_of_url in results_dict.items()}
 #save to pickle
 with open('manual_search_resdict.pkl','wb') as f:
 	pickle.dump(results_dict, f)
