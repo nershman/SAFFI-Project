@@ -4,4 +4,4 @@
 **/*.pkl
 *.pyc
 **/*.pyc
-/__pycache.**
+**/__pycache.**
