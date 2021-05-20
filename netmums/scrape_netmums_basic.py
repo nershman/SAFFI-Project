@@ -2,7 +2,12 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-11 21:59:49
+# @Last Modified time: 2021-05-20 12:32:22
+
+#FIXME: quotes arent being recognized / handled properly and all of them are gettying bundled together as one text.
+	# - fix it so it just keeps the link to the original post? or some type of id or sth.
+	# - be able to handle multiple quotes.
+	# ONLY get the text of the relevant post.
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
@@ -335,7 +340,7 @@ def num_pages_in_thread(soup):
 	#netmums has the first n pages, and then the very last page
 	# (assuming there are so many pages that truncation is necessary)
 	found = soup.find('div', {'class': 
-		re.compile('sc-egg')})
+		re.compile('sc-dOS')})
 	if found is not None:
 		found = found.strings
 	else:
