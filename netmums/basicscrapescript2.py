@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-08 09:16:10
+# @Last Modified time: 2021-05-20 23:17:58
 
 import scrapehelpers as scr
 import scrape_netmums_basic as netmums
@@ -39,7 +39,7 @@ final_data = netmums.get_posts_from_resultsdict(myresultsdict)
 end = time.time()
 print('execution time: ' + str(end - start), '\nsaving dict to pickle...')
 
-filehandler = open('allposts.pkl', 'wb')  
+filehandler = open('allposts_rerun.pkl', 'wb')  
 pickle.dump(final_data, filehandler)
 filehandler.close() #!prevent EOFError when loading pickle
 #my_huge_data_dict = get_posts_from_list(list(myresultsdict.key('url')))

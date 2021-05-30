@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-20 12:32:22
+# @Last Modified time: 2021-05-20 23:11:50
 
 #FIXME: quotes arent being recognized / handled properly and all of them are gettying bundled together as one text.
 	# - fix it so it just keeps the link to the original post? or some type of id or sth.
@@ -295,17 +295,82 @@ def get_post_username(post_soup):
 	return post_soup.find('div', {'class': re.compile('__UserPseudo-')}).text
 
 def get_post_body(post_soup):
-	return post_soup.find('div', {'class': 
-		re.compile('DesktopPostCardstyle__PostContent-')}).text
-#UNTESTED
+	temp_soup = post_soup.find('div', {'class': 
+					re.compile('DesktopPostCardstyle__PostContent-')})
+	#make sure to get the quotes first, because getting text and URLs is DESTRUCTIVE to the guotes.
+	return get_body_quotes_y(temp_soup), get_body_quotes_w(temp_soup), get_body_text(temp_soup), get_body_urls(temp_soup)
+
+def get_body_text(post_body_soup):
+	"""
+	returns string
+	"""
+
+	#get a list of the empty div soup items (could be multiple if text in between quotes)
+	div_bodies = post_body_soup.find_all('div',{'class':None},recursive=False)
+
+	#remove all instances of a white quote from the soup object.
+	#this removes it from the entire soup (IN PLACE) so we can't recover it later :(
+	if div_bodies:
+		for post_body_soup in div_bodies:
+			while post_body_soup.find('div',{'class':'quote'}) is not None:
+				post_body_soup.find('div',{'class':'quote'}).decompose() #remove it.
+		stuff = [post_body_soup.get_text(separator=' \n ') for post_body_soup in div_bodies if post_body_soup is not None]
+	else:
+		stuff = []
+	return ' '.join(stuff)
+
+def get_body_quotes_y(post_body_soup):
+	all_quotes = []
+	quote_soups = post_body_soup.find_all('div', {'class':re.compile('DesktopQuotedPostCardstyle__Container-')})
+	if quote_soups is not None:
+		try:
+			all_quotes = [{'text': item.find('div',{'class':None}).text,
+					'name': item.find('span', {'class':re.compile('DesktopQuotedPostCardstyle__Author-sc')}).text} 
+						for item in quote_soups if item is not None]
+		except TypeError:
+			pass
+	return all_quotes
+
+def get_body_quotes_w(post_body_soup):
+	white_quotes = post_body_soup.find_all('div', {'class':'quote'})
+	if white_quotes is not None:
+		return [item.text for item in white_quotes]
+	else:
+		return []
+
+def get_body_urls(post_body_soup):
+	"""
+	returns list of str
+	"""
+
+	#get a list of the empty div soup items (could be multiple if text in between quotes)
+	div_bodies = post_body_soup.find_all('div',{'class':None},recursive=False)
+
+	#remove all instances of a white quote from the soup object.
+	#this removes it from the entire soup (IN PLACE) so we can't recover it later :(
+	if div_bodies:
+		for post_body_soup in div_bodies:
+			while post_body_soup.find('div',{'class':'quote'}) is not None:
+				post_body_soup.find('div',{'class':'quote'}).decompose() #remove it.
+
+		links_li_of_li = [post_body_soup.find_all('a', href=True) for post_body_soup in div_bodies]
+		extracted = [link['href'] for links in links_li_of_li if links is not None for link in links]
+	else:
+		extracted = []
+	return extracted
+
 def extract_post(post_soup):
 	"""
 	takes a single post soup object
 	"""
+	quotes_y, quotes_w, body_text, body_urls = get_post_body(post_soup)
 	post_dict = {'username': get_post_username(post_soup),
 				'likes': get_post_likes(post_soup),
 				'date': get_post_date(post_soup),
-				'body': get_post_body(post_soup)}
+				'quotes_y': quotes_y,
+				'quotes_w': quotes_w,
+				'body':body_text,
+				'body_urls':body_urls}
 	return post_dict
 
 def extract_posts_from_page(thread_soup):

@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 14:57:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-11 17:50:00
+# @Last Modified time: 2021-05-27 11:29:21
 
 from itertools import product
 
@@ -71,7 +71,6 @@ def get_concerns():
 "phthalates",
 #MICROBIOLOGIC CONTAMINANTS
 "Microbiologic contaminants",
-"bacteria",
 "spores",
 "mold",
 "mould",

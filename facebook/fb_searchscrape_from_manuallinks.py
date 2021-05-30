@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-11 13:00:46
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-16 19:55:44
+# @Last Modified time: 2021-05-26 10:28:31
 
 """
 First Approach:
@@ -105,7 +105,9 @@ for url in posts:
 	scrape_id = url_parts[0]+'/'+url_parts[1]+'/'+url_parts[-1]
 
 	try:
-		url_dict[url] = list(facebook_scraper.get_posts(post_urls = [scrape_id], options=my_fb_options, 
+		#FIXME: this ends up removing the query.
+		# we are supposed to add the results portion asn another key.
+		url_dict[url]['data'] = list(facebook_scraper.get_posts(post_urls = [scrape_id], options=my_fb_options, 
 			timeout=fb_timeout, cookies = cookie_path))
 	except HTTPError:
 		#return none and add url to a list if there was a problem.

@@ -16,9 +16,9 @@ key is the link url (rather than query!)
 UNFINSHED. hehe
 
 {'str_of_linkurl':		#title attrib gets updated
-		{'title':str, 'query':(set of http),
+		{'title':str, 'query':(set of queryURLS where the link appeared),
 		 'posts':[
-		 				{'author':str, 'likes':str, 'body':str}
+		 				{'author':str, 'likes':str, 'body':str, 'quotes_y':[{author:str,text:str}], 'quotes_w:'[str], 'urls':[str]}
 
 		 		 ]
 		}
@@ -26,6 +26,47 @@ UNFINSHED. hehe
 
 }
 	
+#NETMUMS DATA
+#we have a list of post dict.
+post_dict = {'username': get_post_username(post_soup),
+				'likes': get_post_likes(post_soup),
+				'date': get_post_date(post_soup),
+				'quotes_y': quotes_y,
+				'quotes_w': quotes_w,
+				'body':body_text,
+				'body_urls':body_urls}
 
+##FACEBOOK DATA
 
-
+pprint(fb_search[list(fb_search.keys())[1]])
+>
+{'data': [{'available': None,
+           'comments': None,
+           'comments_full': None,
+           'factcheck': None,
+           'images_description': None,
+           'images_lowquality': None,
+           'images_lowquality_description': None,
+           'likes': None,
+           'link': None,
+           'post_id': None,
+           'post_text': None,
+           'post_url': 'https://m.facebook.com/AhSengDurian/posts/1576229315761364',
+           'reactors': None,
+           'shared_text': None,
+           'shared_time': None,
+           'shared_user_id': None,
+           'shared_username': None,
+           'shares': None,
+           'text': None,
+           'time': None,
+           'user_id': None,
+           'user_url': None,
+           'username': None,
+           'video_watches': None,
+           'w3_fb_url': None}],
+ 'query': {'site:en-gb.facebook.com/*/posts/ OR site:www.facebook.com/*/posts/ '
+           '"biphenyls" baby formula OR bottle-fed OR veggie OR vegetable OR '
+           'baby food OR veg puree OR fruit puree OR fruit food OR applesauce '
+           'OR cereal OR  porridge OR oats OR oatmeal OR jar food OR baby food '
+           'OR  premade OR puree OR  purée OR yoghurt OR pudding'}}

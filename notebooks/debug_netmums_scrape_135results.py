@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-21 18:42:05
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-20 12:28:07
+# @Last Modified time: 2021-05-20 23:08:31
 
 
 import os 
@@ -31,3 +31,26 @@ bad_page_count = netmums.num_pages_in_thread(BeautifulSoup(s.get(weird_url).text
 
 soup = BeautifulSoup(s.get(weird_url).text)
 
+
+### MAKING THE GETTING QUOTES STUFF.
+soup = BeautifulSoup(s.get('https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/840648-healthy-non-processed-cheap-foodie-thread-9.html').text)
+page_soup = netmums.get_posts_from_page(soup)
+post_soup_yelllow_quote = page_soup[14]
+post_soup_white_quote = page_soup[13]
+#the multi-quote yellow
+soup = BeautifulSoup(s.get('https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/840648-healthy-non-processed-cheap-foodie-thread-11.html').text)
+page_soupp = netmums.get_posts_from_page(soup)
+multi = page_soupp[0]
+url_test = BeautifulSoup(s.get('https://www.netmums.com/coffeehouse/other-chat-514/news-12/1058671-school-names-shames-badly-parked-parents.html').text)
+page_url = netmums.get_posts_from_page(url_test)
+blah = page_url[0]
+
+#NEW TEST NOW after improving scrape_netmums_basic
+
+test_keys = [
+'https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/840648-healthy-non-processed-cheap-foodie-thread-9.html',
+'https://www.netmums.com/coffeehouse/family-food-recipes-555/food-tips-ideas-556/840648-healthy-non-processed-cheap-foodie-thread-11.html', 
+'https://www.netmums.com/coffeehouse/other-chat-514/news-12/1058671-school-names-shames-badly-parked-parents.html']
+blah=[]
+for url in test_keys:
+	blah.append(netmums.extract_posts_from_page(BeautifulSoup(s.get(url).text)))

@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-11 13:00:46
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-18 09:16:57
+# @Last Modified time: 2021-05-22 15:00:51
 
 """
 First Approach:
@@ -12,8 +12,8 @@ First Approach:
 	- goals: keep query source as previously w netmums scrape.
 """
 
-#import os #DEBUG
-#os.chdir('/Users/sma/Documents/INRAE internship/scrape-git/facebook') #DEBUG
+import os #DEBUG
+os.chdir('/Users/sma/Documents/INRAE internship/scrape-git/facebook') #DEBUG
 
 import sys
 sys.path.append('../') #make parent path visible so we can import modules from other folders.
@@ -94,22 +94,9 @@ results_dict = {}
 for query in search_queries:
 	if query not in results_dict:
 		print(len(results_dict), "/", len(search_queries), " completed")
-		time.sleep(random_uniform(1,4))
 		try:
 			engine.results.__init__() #reset the results object (o.w. it keeps results from previous queries)
-			search_results = engine.search(query, pages=num_pages).links() #get links
+			engine.search(query, pages=num_pages).links() #get links
 
-
-			if not engine.is_banned:
-				results_dict[query] = [{'link':result} for result in search_results] # convert to list of dicts.
-
-			else:
-				print("quitting due to ban")
-				exit()
 		except KeyboardInterrupt: #if you press ctrl-c in the console now, the process will end 
 			exit()
-
-		if not search_results or search_results is None:
-			#when theres no results it goes too fast, slow it down.
-			print(query + ': no results. :(')
-			time.sleep(random_uniform(2,6))
