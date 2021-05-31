@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-29 20:41:57
+# @Last Modified time: 2021-05-31 12:51:56
 """
 Goal: build a set of functions to create our metrics.
 In the end, I think we will use a dataframe where each obs is a URL corresponding to 
@@ -47,7 +47,8 @@ with open('fb_data_searchscrape.pkl', 'rb') as f:
 from sklearn.feature_extraction.text import CountVectorizer
 
 #TODO: convert the matrix fb_spars into a pandas dataframe 
-
+#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
+#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 ################################
 # helper functions to main ones#
 ################################
@@ -63,9 +64,6 @@ def get_counts_from_text_dict(text_dict):
 # FUNCTIONS I WILL USE#
 #######################
 """
-IMPORT NOTE TO SELF: 
-with facebook, if it's a page then there is multiple post datas in a 'data', so we need
-to build indicators FOR EACH POST in it.
 """
 
 #TODO: UNTESTED
@@ -75,21 +73,11 @@ def get_term_counts(result_dict, fb=False):
 	"""
 	if fb:
 		#extract text from dict and build a dict where values are strings of text
-		textdict = {}
-		for key, value in result_dict.items():
-			list_of_strings = []
-			for ind, item in enumerate(value['data']):
-				list_of_strings[ind] = ''
-				if item['text']:
-					list_of_strings[ind] = list_of_strings[ind] + ' ' + item['text']
-				if item['comments_full']:
-					for item in value['data']:
-						list_of_strings[ind] = list_of_strings[ind] + ' ' + \
-							' '.join([str(c['comment_text']) for c in item['comments_full']])
-
-			textdict[key] = list_of_strings
-
-	else: #netmums
+		textdict = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
+		[str(item['text']) for item in value['data']] + \
+		[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
+		) for key, value in result_dict.items()}
+	else:
 		textdict = {key: value['title'] + ' ' + \
 		' '.join([str(item['body']) for item in value['posts']]) for key, value in netmums.items()}
 
@@ -143,31 +131,58 @@ def get_total_likes(results_dict, fb=False):
 		likes = {key: np.sum([post['likes'] for post in value['posts']]) for key, value in results_dict.items()}
 
 	for key, value in likes.items():
+		result_dict[key]['total_likes'] = value
 
-
-def get_comments_for_mining(results_dict, fb=False):
+def get_available_comments(results_dict, fb=False):
 	"""
 	ONLY for the facebook count length of comments
+	for netmums is returns the same number as get_comment_activity
 	"""
 	if fb:
-
+		num_c = {key: np.sum([len(post['comments_full']) for post in value['data']]) for key, value in results_dict.items()}
 	else:
+		num_c = {key: len(value['posts']) for key, value in results_dict.items()}
 
+	for key, value in num_c.items():
+		result_dict[key]['available_comments'] = value
 
 def get_comment_activity(results_dict, fb=False):
 	"""
-	note that for netmums this is the same
+	returns reported number of comments for FB and for netmums counts avail comments
 	"""
-	if fb: 
-		num_comments = {key: len(value['data']) for key, value in results_dict.items()}
+	if fb:
+		num_c = {key: np.sum([post['comments'] for post in value['data']]) for key, value in results_dict.items()}
 	else:
-		num_comments = {key: len(value['posts']) for key, value in results_dict.items()}
+		num_c = {key: len(value['posts']) for key, value in results_dict.items()}
 
-def get_unique_posters(results_dict, fb=False):
-	pass
+	for key, value in num_c.items():
+		result_dict[key]['available_comments'] = value
+
+#TODO UNTESTED
+def get_num_unique_posters(results_dict, fb=False):
+	if fb:
+		names = {key: {item['username'], c['commenter_name'] for c in item['comments_full'] if item['comments_full']} for item in value for key, value in results_dict.items()}
+		for key, value in 
+	pass #TODOnames = {key: {item['username']} for key, value in fb_search.items() for item in value['data']}
 
 def get_num_urls(results_dict, fb=False):
-	pass
+	if fb:
+		#get all the fb text
+		textdict = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
+		[str(item['text']) for item in value['data']] + \
+		[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
+		) for key, value in result_dict.items()}
+		#extract the links from the text using regex
+		regex = '/([\w+]+\:\/\/)?([\w\d-]+\.)*[\w-]+[\.\:]\w+([\/\?\=\&\#\.]?[\w-]+)*\/?/gm'
+		textdict = {key: len(re.findall(regex, value)) for key, value in textdict.items()}
+
+	else:
+		#TODO netmums
+
+	for key, item in textdict.item():
+	#dict of 'term':count for each document
+	result_dict[key]['num_urls'] = item
+	return
 
 def get_avg_length(results_dict, fb=False):
 	pass
