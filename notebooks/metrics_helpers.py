@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-01 14:51:21
+# @Last Modified time: 2021-06-01 20:10:43
 """
 Goal: build a set of functions to create our metrics.
 In the end, I think we will use a dataframe where each obs is a URL corresponding to 
@@ -67,8 +67,6 @@ def get_counts_from_text_dict(text_dict):
 """
 """
 
-#TODO: UNTESTED
-#FIXME this takes too long / doesnt end.
 def add_term_counts(results_dict, fb=False):
 	"""
 	For each key in a dict, add a new key to it's value (also a dict) named 'term_counts' containing a list thing.
@@ -94,7 +92,7 @@ def add_term_counts(results_dict, fb=False):
 		results_dict[key]['term_counts'] = {key: fb_spars[num][value] for key, value in term_counter.vocabulary_.items()}
 	return
 
-#TODO: UNTESTED
+
 def add_url_term_counts(results_dict, fb=False):
 	if fb:
 		#get all the fb text
@@ -118,7 +116,6 @@ def add_url_term_counts(results_dict, fb=False):
 		results_dict[key]['url_term_counts'] = {key: fb_spars[num][value] for key, value in term_counter.vocabulary_.items()}
 	return
 
-#TODO UNTESTED
 def add_total_likes(results_dict, fb=False):
 	"""
 	for facebook: return likes of a post (not comments)
@@ -127,21 +124,21 @@ def add_total_likes(results_dict, fb=False):
 	if fb:
 		likes = {key: np.sum([post['likes'] for post in value['data']]) for key, value in results_dict.items()}
 	else:
-		likes = {key: np.sum([post['likes'] for post in value['posts']]) for key, value in results_dict.items()}
+		likes = {key: np.sum([int(post['likes']) for post in value['posts']]) for key, value in results_dict.items()}
 
 	#add key to dict
 	for key, value in likes.items():
 		results_dict[key]['total_likes'] = value
 
 	return
-#TODO: UNTESTED	
+
 def add_available_comments(results_dict, fb=False):
 	"""
 	ONLY for the facebook count length of comments
 	for netmums is returns the same number as get_comment_activity
 	"""
 	if fb:
-		num_c = {key: np.sum([len(post['comments_full']) for post in value['data']]) for key, value in results_dict.items()}
+		num_c = {key: np.sum([len(post['comments_full']) for post in value['data'] if post['comments_full']]) for key, value in results_dict.items()}
 	else:
 		num_c = {key: len(value['posts']) for key, value in results_dict.items()}
 
@@ -149,7 +146,7 @@ def add_available_comments(results_dict, fb=False):
 	for key, value in num_c.items():
 		results_dict[key]['available_comments'] = value
 	return
-#TODO: UNTESTED	
+
 def add_comment_activity(results_dict, fb=False):
 	"""
 	returns reported number of comments for FB and for netmums counts avail comments
@@ -165,7 +162,7 @@ def add_comment_activity(results_dict, fb=False):
 
 	return
 
-#TODO UNTESTED
+
 def add_num_unique_posters(results_dict, fb=False):
 	names = {}
 	if fb:
@@ -229,7 +226,7 @@ def add_avg_comment_length(results_dict):
 		results_dict[key]['avg_comment_length'] = item
 	return	
 
-#TODO UNTESTED
+
 def add_avg_post_length(results_dict, fb=False):
 	if fb:
 		length_dict = {key: [len(item['text']) for item in value['data'] if item['text']] for key, value in results_dict.items()}
@@ -242,17 +239,17 @@ def add_avg_post_length(results_dict, fb=False):
 	for key, item in length_dict.items():
 		results_dict[key]['avg_post_length'] = item
 	return	
-#TODO: UNTESTED
+
 def add_num_comments(results_dict, fb=False):
 	if fb:
-		num_dict = {key: len(item['comments_full']) for key, value in results_dict.items() for item in value['data']}
+		num_dict = {key: len(item['comments_full']) for key, value in results_dict.items() for item in value['data'] if item['comments_full']}
 	else:
 		num_dict = {key: len(thread['posts']) for key, thread in results_dict.items()}
 	#add key to dict
 	for key, item in num_dict.items():
 		results_dict[key]['num_posts'] = item
 	return
-#TODO UNTESTED
+
 def add_post_time(results_dict, fb=False):
 	"""
 	facebook: returns a datetime object corresponding ot the post
@@ -262,24 +259,23 @@ def add_post_time(results_dict, fb=False):
 		dt_dict = {key: item['time'] for key, value in results_dict.items() for item in value['data']}
 	else:
 		dt_dict = {key: [post['date'] for post in thread['posts']] for key, thread in results_dict.items()}
-		dt_dict = {key: datetime.strptime(value, '%m/%d/%Y at %I:%M %p') for key, value in dt_dict.items()}
+		dt_dict = {key: datetime.strptime(item, '%m/%d/%Y at %I:%M %p') for key, value in dt_dict.items() for item in value}
 	#add key to dict
 	for key, item in dt_dict.items():
 		results_dict[key]['post_time'] = item
 	return
 
+#FIXME: it hangs forever(?) or its hells slow idk.
 def add_post_language(results_dict, fb = True): #facebook only! (we dont need it for netmums)
 	"""
 	tag  posts language using package cld2
 	"""
-	#THIS ONE TAKES A LONG TIME :/
-	#IF IT FROZE IT"s BECAUSE IT USED TOO MUCH MEMORY I AM GUESSING LOL. NEED TO ADD MEM MANAGMENT
 	#process text to single strings
 	if fb:
 		textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
 		[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
 		) for key, value in results_dict.items()}
-	else:
+	else: #netmums is kind of superfluos since we know the entire forum is in english
 		textdict = {key: value['title'] + ' ' + \
 		' '.join([str(item['body']) for item in value['posts']]) for key, value in results_dict.items()}
 
@@ -288,7 +284,11 @@ def add_post_language(results_dict, fb = True): #facebook only! (we dont need it
 	textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
 
 	for key, value in textdict.items():
-		_, _, details = cld2.detect(value)
+		try:
+			_, _, details = cld2.detect(value, bestEffort = True)
+		except: #if there's a unicode error which throws pycld2.error then we want to remove those unicodes
+			printable_str = ''.join(x for x in value if x.isprintable())
+			_, _, details = cld2.detect(printable_str, bestEffort = True)
 		#dict of 'term':count for each document
 		results_dict[key]['post_language'] = details[0]
 	return
