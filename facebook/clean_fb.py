@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-28 12:34:21
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-30 10:47:56
+# @Last Modified time: 2021-06-01 14:25:32
 import os #DEBUG
 os.chdir('/Users/sma/Documents/INRAE internship/scrape-git') #DEBUG
 import pickle as pk
@@ -74,8 +74,8 @@ for key in search_posts:
 	fb_flat[key] = fb_joined[key]
 for key in search_pages:
 	for item in fb_joined[key]['data']:
-		fb_flat[item['post_url']] = [item]
+		fb_flat[item['post_url']] = {'data':[item], 'query':fb_joined[key]['query']}
 
 #save to a new thing.
-with open('fb_merged_cleaned_flat.pkl', 'wb') as f:
-	pk.dump(fb_joined,f)
+with open('facebook/fb_merged_cleaned_flat.pkl', 'wb') as f:
+	pk.dump(fb_flat,f)
