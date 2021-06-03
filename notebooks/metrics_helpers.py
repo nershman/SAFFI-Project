@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-01 20:10:43
+# @Last Modified time: 2021-06-03 11:18:42
 """
 Goal: build a set of functions to create our metrics.
 In the end, I think we will use a dataframe where each obs is a URL corresponding to 
@@ -158,7 +158,7 @@ def add_comment_activity(results_dict, fb=False):
 
 	#add key to dict
 	for key, value in num_c.items():
-		results_dict[key]['available_comments'] = value
+		results_dict[key]['comment_activity'] = value
 
 	return
 
@@ -239,16 +239,6 @@ def add_avg_post_length(results_dict, fb=False):
 	for key, item in length_dict.items():
 		results_dict[key]['avg_post_length'] = item
 	return	
-
-def add_num_comments(results_dict, fb=False):
-	if fb:
-		num_dict = {key: len(item['comments_full']) for key, value in results_dict.items() for item in value['data'] if item['comments_full']}
-	else:
-		num_dict = {key: len(thread['posts']) for key, thread in results_dict.items()}
-	#add key to dict
-	for key, item in num_dict.items():
-		results_dict[key]['num_posts'] = item
-	return
 
 def add_post_time(results_dict, fb=False):
 	"""
