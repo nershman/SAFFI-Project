@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-03 11:18:42
+# @Last Modified time: 2021-06-07 14:38:37
 """
 Goal: build a set of functions to create our metrics.
 In the end, I think we will use a dataframe where each obs is a URL corresponding to 
@@ -285,5 +285,13 @@ def add_post_language(results_dict, fb = True): #facebook only! (we dont need it
 	
 
 
-def num_quotes(results_dict): #ONLY netmums
+def add_num_quotes(results_dict): #ONLY netmums
 	pass #TODO
+
+def add_vocabulary_diversity(results_dict):
+	pass
+
+
+#############################
+## #MORE COMPLICATED METRICS#
+#############################
