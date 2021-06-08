@@ -2,18 +2,15 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-07 14:38:37
+# @Last Modified time: 2021-06-07 20:15:18
 """
-Goal: build a set of functions to create our metrics.
-In the end, I think we will use a dataframe where each obs is a URL corresponding to 
-a key in one of our dicts.
+TODO: modify this to be a class where you first do 
 
-#TODO: make sure we differentiate facebook POSTS from facebook pages
-#TODO: we probably should separate out post somehow.
-	- maybe in the dataframe i can put the index of the specific post as well 
+newthing = metrics_helpers.function(dict, fb=True) <- construct a new object where a certain dict is references/asgned at the construct
+then you just do
+newthing.add_variable()
 
-
-UPDATE: this file is unused.
+((then we can also just tokenize text once, and i guess provide options in initialization for that as well))
 
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -39,6 +36,9 @@ import sys
 import pickle as pk
 import numpy as np
 from pprint import pprint 
+
+from lexical_diversity import lex_div as ld
+
 
 #open the facebook data
 with open('fb_merged_cleaned_flat.pkl', 'rb') as f:
@@ -284,14 +284,77 @@ def add_post_language(results_dict, fb = True): #facebook only! (we dont need it
 	return
 	
 
-
+#TODO untested
 def add_num_quotes(results_dict): #ONLY netmums
 	pass #TODO
 
-def add_vocabulary_diversity(results_dict):
-	pass
+#TODO untested
+def add_lexical_richness(results_dict, fb = False): #AKA vocabulary diversity
+	"""
+	We do not use TTR (Type-to-Token Ratio) because it introduces a bias for size of sentences. for each document (URL)
+	Source: https://github.com/jennafrens/lexical_diversity "has an inverse ..."
+	We use MTLD instead. (we could also use HDD?)
+
+	"""
+	if fb:
+		#extract text from dict and build a dict where values are strings of text
+		textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
+		[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
+		) for key, value in results_dict.items()}
+	else:
+		textdict = {key: value['title'] + ' ' + \
+		' '.join([str(item['body']) for item in value['posts']]) for key, value in results_dict.items()}
+	#remove all links from the text
+	regex = r'http\S+'
+	textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
+
+#generate TTF for each document or something....
+
+	diversity = {}
+	for key in textdict.keys():
+		diversity[key] = ld.mtld(textdict[key].split())
+	
+	#add new key to dict with labeled count items 
+	for key, value in diversity.items():
+		#dict of 'term':count for each document
+		results_dict[key]['lexical_richness'] = value
+	return
+
+def add_ttr(result_dict, fb = False):
+	"""
+	Implement TTR just to see if its useful.
+	"""
+	if fb:
+		#extract text from dict and build a dict where values are strings of text
+		textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
+		[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
+		) for key, value in results_dict.items()}
+	else:
+		textdict = {key: value['title'] + ' ' + \
+		' '.join([str(item['body']) for item in value['posts']]) for key, value in results_dict.items()}
+	#remove all links from the text
+	regex = r'http\S+'
+	textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
+
+#generate TTF for each document or something....
+
+	diversity = {}
+	for key in textdict.keys():
+		diversity[key] = ld.ttr(textdict[key].split())
+	
+	#add new key to dict with labeled count items 
+	for key, value in diversity.items():
+		#dict of 'term':count for each document
+		results_dict[key]['lexical_richness'] = value
+	return
 
 
 #############################
 ## #MORE COMPLICATED METRICS#
 #############################
+
+def add_serious_measure():
+	pass
+
+def add_transitivity_score():
+	pass
