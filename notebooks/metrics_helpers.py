@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 18:18:48
+# @Last Modified time: 2021-06-08 18:38:06
 """
 TODO: modify this to be a class where you first do 
 
@@ -48,6 +48,9 @@ import pycld2 as cld2
 # helper functions to class#
 ################################
 def get_counts_from_text_dict(text_dict):
+	"""
+	Takes a dict  of keys of URLs and value as string.
+	"""
 	vocab = scr.get_concerns() + scr.get_foods()
 	vocab = {substring.lower().strip() for item in vocab for substring in item.split()}
 	term_counter = CountVectorizer(vocabulary = vocab, stop_words = 'english')
@@ -57,8 +60,8 @@ def get_counts_from_text_dict(text_dict):
 	#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 	#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 
+def clustering(text_dict):
 
-#TODO: make it a class instead
 
 class indicators:
 	"""
@@ -68,6 +71,11 @@ class indicators:
 	def __init__(self, results_dict, fb):
 		self.results_dict = results_dict
 		self.fb = fb
+		#TODO generate the strings 
+
+	def get_dict(self, non_ind=True):
+		#TODO: if non_ind false then return only indicators
+		return self.results_dict
 
 
 	def add_term_counts(self):
@@ -290,7 +298,7 @@ class indicators:
 	def add_num_quotes(self): #ONLY netmums
 		pass #TODO
 	
-	def add_lexical_richness(): #AKA vocabulary diversity
+	def add_lexical_richness(self): #AKA vocabulary diversity
 		"""
 		We do not use TTR (Type-to-Token Ratio) because it introduces a bias for size of sentences. for each document (URL)
 		Source: https://github.com/jennafrens/lexical_diversity "has an inverse ..."
@@ -337,7 +345,7 @@ class indicators:
 		regex = r'http\S+'
 		textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
 	
-	#generate TTF for each document or something....
+		#generate TTF for each document or something....
 	
 		diversity = {}
 		for key in textdict.keys():
@@ -354,6 +362,12 @@ class indicators:
 	## #MORE COMPLICATED METRICS#
 	#############################
 	
+	def add_topic_cluster(self):
+		pass
+
+	def add_hazard_product_distance(self):
+		pass
+
 	def add_serious_measure(self):
 		pass
 	
