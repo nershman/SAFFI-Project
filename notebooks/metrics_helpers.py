@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 18:38:06
+# @Last Modified time: 2021-06-08 18:51:24
 """
 TODO: modify this to be a class where you first do 
 
@@ -47,6 +47,7 @@ import pycld2 as cld2
 ################################
 # helper functions to class#
 ################################
+
 def get_counts_from_text_dict(text_dict):
 	"""
 	Takes a dict  of keys of URLs and value as string.
@@ -77,24 +78,25 @@ class indicators:
 		#TODO: if non_ind false then return only indicators
 		return self.results_dict
 
+	def get_text_dict(self), remove_links = True:
+		if fb:
+			text_dict = {key: ' '.join([str(item['text']) for item in value['data']] + \
+			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
+			) for key, value in self.results_dict.items()}
+		else:
+			text_dict = {key: value['title'] + ' ' + \
+			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
+		if remove_links:
+			regex = r'http\S+'
+			textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
+		return text_dict
 
 	def add_term_counts(self):
 		"""
 		For each key in a dict, add a new key to it's value (also a dict) named 'term_counts' containing a list thing.
 		"""
-		if fb:
-			#extract text from dict and build a dict where values are strings of text
-			textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
-			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
-			) for key, value in self.results_dict.items()}
-		else:
-			textdict = {key: value['title'] + ' ' + \
-			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
-		#remove all links from the text
-		regex = r'http\S+'
-		textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
-					#FIXME: not sure if shoul dhav ethe join or not (i deleted in this one.)
-		#analyze
+		textdict = self.get_text_dict()
+
 		fb_spars, term_counter = get_counts_from_text_dict(textdict)
 		fb_spars = fb_spars.toarray()
 		#add new key to dict with labeled count items 
@@ -225,8 +227,10 @@ class indicators:
 		return
 	
 	def add_avg_comment_length(self): 
-		#facebook ONLY.
-		#fb = True
+		if not fb: #TODO make this a warning.
+			print("add_avg_comment_length is only applicable for facebook. no data added.")
+			return
+
 		#get a list of lengths of comments for each post
 		length_dict = {key: [len(c['comment_text']) for c in item['comments_full']] \
 			for key, value in self.results_dict.items() for item in value['data'] if item['comments_full']}
@@ -271,18 +275,8 @@ class indicators:
 		tag  posts language using package cld2
 		"""
 		#process text to single strings
-		if fb:
-			textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
-			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
-			) for key, value in self.results_dict.items()}
-		else: #netmums is kind of superfluos since we know the entire forum is in english
-			textdict = {key: value['title'] + ' ' + \
-			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
-	
-		#remove all links from the text
-		regex = r'http\S+'
-		textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
-	
+		textdict = self.get_text_dict()
+
 		for key, value in textdict.items():
 			try:
 				_, _, details = cld2.detect(value, bestEffort = True)
@@ -305,19 +299,9 @@ class indicators:
 		We use MTLD instead. (we could also use HDD?)
 	
 		"""
-		if fb:
-			#extract text from dict and build a dict where values are strings of text
-			textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
-			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
-			) for key, value in self.results_dict.items()}
-		else:
-			textdict = {key: value['title'] + ' ' + \
-			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
-		#remove all links from the text
-		regex = r'http\S+'
-		textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
-	
-	#generate TTF for each document or something....
+		textdict = self.get_text_dict()
+
+		#generate TTF for each document or something....
 	
 		diversity = {}
 		for key in textdict.keys():
@@ -333,18 +317,8 @@ class indicators:
 		"""
 		Implement TTR just to see if its useful.
 		"""
-		if fb:
-			#extract text from dict and build a dict where values are strings of text
-			textdict = {key: ' '.join([str(item['text']) for item in value['data']] + \
-			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
-			) for key, value in self.results_dict.items()}
-		else:
-			textdict = {key: value['title'] + ' ' + \
-			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
-		#remove all links from the text
-		regex = r'http\S+'
-		textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
-	
+		textdict = self.get_text_dict() #TODO: UNTESTED
+
 		#generate TTF for each document or something....
 	
 		diversity = {}
