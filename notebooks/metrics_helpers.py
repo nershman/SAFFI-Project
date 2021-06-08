@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 16:26:25
+# @Last Modified time: 2021-06-08 18:18:48
 """
 TODO: modify this to be a class where you first do 
 
@@ -70,7 +70,7 @@ class indicators:
 		self.fb = fb
 
 
-	def add_term_counts():
+	def add_term_counts(self):
 		"""
 		For each key in a dict, add a new key to it's value (also a dict) named 'term_counts' containing a list thing.
 		"""
@@ -96,7 +96,7 @@ class indicators:
 		return
 	
 	
-	def add_url_term_counts():
+	def add_url_term_counts(self):
 		if fb:
 			#get all the fb text
 			textdict = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
@@ -119,7 +119,7 @@ class indicators:
 			self.results_dict[key]['url_term_counts'] = {key: fb_spars[num][value] for key, value in term_counter.vocabulary_.items()}
 		return
 	
-	def add_total_likes():
+	def add_total_likes(self):
 		"""
 		for facebook: return likes of a post (not comments)
 		for netmums: return total likes of comments in a thread
@@ -135,7 +135,7 @@ class indicators:
 	
 		return
 	
-	def add_available_comments():
+	def add_available_comments(self):
 		"""
 		ONLY for the facebook count length of comments
 		for netmums is returns the same number as get_comment_activity
@@ -150,7 +150,7 @@ class indicators:
 			self.results_dict[key]['available_comments'] = value
 		return
 	
-	def add_comment_activity():
+	def add_comment_activity(self):
 		"""
 		returns reported number of comments for FB and for netmums counts avail comments
 		"""
@@ -166,7 +166,7 @@ class indicators:
 		return
 	
 	
-	def add_num_unique_posters():
+	def add_num_unique_posters(self):
 		names = {}
 		if fb:
 			for key, value in fb_search.items():
@@ -192,7 +192,7 @@ class indicators:
 	
 		return
 	
-	def add_num_urls():
+	def add_num_urls(self):
 		if fb:
 			#get all the fb text
 			body_urls = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
@@ -216,7 +216,7 @@ class indicators:
 			self.results_dict[key]['num_urls'] = item
 		return
 	
-	def add_avg_comment_length(): 
+	def add_avg_comment_length(self): 
 		#facebook ONLY.
 		#fb = True
 		#get a list of lengths of comments for each post
@@ -230,7 +230,7 @@ class indicators:
 		return	
 	
 	
-	def add_avg_post_length():
+	def add_avg_post_length(self):
 		if fb:
 			length_dict = {key: [len(item['text']) for item in value['data'] if item['text']] for key, value in self.results_dict.items()}
 		else:
@@ -243,7 +243,7 @@ class indicators:
 			self.results_dict[key]['avg_post_length'] = item
 		return	
 	
-	def add_post_time():
+	def add_post_time(self):
 		"""
 		facebook: returns a datetime object corresponding ot the post
 		netmums: returns a list of datetime corresponding to date of each post in a thread.
@@ -258,7 +258,7 @@ class indicators:
 			self.results_dict[key]['post_time'] = item
 		return
 	
-	def add_post_language(): #facebook only! (we dont need it for netmums)
+	def add_post_language(self): #facebook only! (we dont need it for netmums)
 		"""
 		tag  posts language using package cld2
 		"""
@@ -287,7 +287,7 @@ class indicators:
 		
 	
 	#TODO untested
-	def add_num_quotes(): #ONLY netmums
+	def add_num_quotes(self): #ONLY netmums
 		pass #TODO
 	
 	def add_lexical_richness(): #AKA vocabulary diversity
@@ -321,7 +321,7 @@ class indicators:
 			self.results_dict[key]['lexical_richness'] = value
 		return
 	
-	def add_ttr():
+	def add_ttr(self):
 		"""
 		Implement TTR just to see if its useful.
 		"""
@@ -354,8 +354,8 @@ class indicators:
 	## #MORE COMPLICATED METRICS#
 	#############################
 	
-	def add_serious_measure():
+	def add_serious_measure(self):
 		pass
 	
-	def add_transitivity_score():
+	def add_transitivity_score(self):
 		pass	
