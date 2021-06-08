@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 18:51:24
+# @Last Modified time: 2021-06-08 18:52:32
 """
 TODO: modify this to be a class where you first do 
 
@@ -78,7 +78,7 @@ class indicators:
 		#TODO: if non_ind false then return only indicators
 		return self.results_dict
 
-	def get_text_dict(self), remove_links = True:
+	def get_text_dict(self, remove_links = True):
 		if fb:
 			text_dict = {key: ' '.join([str(item['text']) for item in value['data']] + \
 			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
