@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-07 20:15:18
+# @Last Modified time: 2021-06-08 16:15:31
 """
 TODO: modify this to be a class where you first do 
 
@@ -39,14 +39,11 @@ from pprint import pprint
 
 from lexical_diversity import lex_div as ld
 
-
-#open the facebook data
-with open('fb_merged_cleaned_flat.pkl', 'rb') as f:
-    fb_search = pk.load(f)
-#####################
 from sklearn.feature_extraction.text import CountVectorizer
 from datetime import datetime
 import pycld2 as cld2
+
+
 #TODO: convert the matrix fb_spars into a pandas dataframe 
 #NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 #https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
