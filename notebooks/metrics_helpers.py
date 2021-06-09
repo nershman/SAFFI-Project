@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 18:52:32
+# @Last Modified time: 2021-06-09 10:07:41
 """
 TODO: modify this to be a class where you first do 
 
@@ -61,8 +61,32 @@ def get_counts_from_text_dict(text_dict):
 	#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 	#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 
-def clustering(text_dict):
+def clustering(text_dict, chosen_k = 10, n_features = 1000):
+	"""
+	chosen_k: int
+	"""
+	text_list = list(text_dict.values())
+	keys = list(text_dict.keys())
+	#fit and transform data
+	vectorizer = TfidfVectorizer(max_df=0.5, max_features=n_features,min_df=2, 
+                             stop_words='english',use_idf=True)
+	X = vectorizer.fit_transform(text_list)
 
+	km = MiniBatchKMeans(n_clusters=true_k)
+	km.fit(X)
+	#TODO: return the fitted values (which cluster each item belongs to)
+	return custer_dict
+
+def LDA():
+
+	tf_vectorizer = CountVectorizer(max_df=0.5, min_df=2, max_features=n_features, 
+                                stop_words='english')
+	tf = tf_vectorizer.fit_transform(documents)
+	tf_feature_names = tf_vectorizer.get_feature_names()
+	lda = LatentDirichletAllocation(n_components=n_topics, 
+                                learning_method="batch").fit(tf)
+	lda_W = lda.transform(tf)
+	lda_H = lda.components_
 
 class indicators:
 	"""
@@ -79,7 +103,7 @@ class indicators:
 		return self.results_dict
 
 	def get_text_dict(self, remove_links = True):
-		if fb:
+		if self.fb:
 			text_dict = {key: ' '.join([str(item['text']) for item in value['data']] + \
 			[' '.join([str(c['comment_text']) for c in item['comments_full']]) for item in value['data'] if item['comments_full']]
 			) for key, value in self.results_dict.items()}
@@ -88,7 +112,7 @@ class indicators:
 			' '.join([str(item['body']) for item in value['posts']]) for key, value in self.results_dict.items()}
 		if remove_links:
 			regex = r'http\S+'
-			textdict = {key: re.sub(regex, '', value) for key, value in textdict.items()}
+			text_dict = {key: re.sub(regex, '', value) for key, value in text_dict.items()}
 		return text_dict
 
 	def add_term_counts(self):
@@ -107,7 +131,7 @@ class indicators:
 	
 	
 	def add_url_term_counts(self):
-		if fb:
+		if self.fb:
 			#get all the fb text
 			textdict = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
 			[str(item['text']) for item in value['data']] + \
@@ -134,7 +158,7 @@ class indicators:
 		for facebook: return likes of a post (not comments)
 		for netmums: return total likes of comments in a thread
 		"""
-		if fb:
+		if self.fb:
 			likes = {key: np.sum([post['likes'] for post in value['data']]) for key, value in self.results_dict.items()}
 		else:
 			likes = {key: np.sum([int(post['likes']) for post in value['posts']]) for key, value in self.results_dict.items()}
@@ -150,7 +174,7 @@ class indicators:
 		ONLY for the facebook count length of comments
 		for netmums is returns the same number as get_comment_activity
 		"""
-		if fb:
+		if self.fb:
 			num_c = {key: np.sum([len(post['comments_full']) for post in value['data'] if post['comments_full']]) for key, value in self.results_dict.items()}
 		else:
 			num_c = {key: len(value['posts']) for key, value in self.results_dict.items()}
@@ -164,7 +188,7 @@ class indicators:
 		"""
 		returns reported number of comments for FB and for netmums counts avail comments
 		"""
-		if fb:
+		if self.fb:
 			num_c = {key: np.sum([post['comments'] for post in value['data']]) for key, value in self.results_dict.items()}
 		else:
 			num_c = {key: len(value['posts']) for key, value in self.results_dict.items()}
@@ -178,8 +202,8 @@ class indicators:
 	
 	def add_num_unique_posters(self):
 		names = {}
-		if fb:
-			for key, value in fb_search.items():
+		if self.fb:
+			for key, value in self.results_dict.items():
 				names[key] = set()
 				for item in value['data']:
 					if item['username']:
@@ -203,7 +227,7 @@ class indicators:
 		return
 	
 	def add_num_urls(self):
-		if fb:
+		if self.fb:
 			#get all the fb text
 			body_urls = {key: ' '.join([str(item['post_text']) for item in value['data']] + \
 			[str(item['text']) for item in value['data']] + \
@@ -227,7 +251,7 @@ class indicators:
 		return
 	
 	def add_avg_comment_length(self): 
-		if not fb: #TODO make this a warning.
+		if not self.fb: #TODO make this a warning.
 			print("add_avg_comment_length is only applicable for facebook. no data added.")
 			return
 
@@ -243,7 +267,7 @@ class indicators:
 	
 	
 	def add_avg_post_length(self):
-		if fb:
+		if self.fb:
 			length_dict = {key: [len(item['text']) for item in value['data'] if item['text']] for key, value in self.results_dict.items()}
 		else:
 			length_dict = {key: [len(post['body']) for post in thread['posts']] for key, thread in self.results_dict.items()}
@@ -260,7 +284,7 @@ class indicators:
 		facebook: returns a datetime object corresponding ot the post
 		netmums: returns a list of datetime corresponding to date of each post in a thread.
 		"""
-		if fb:
+		if self.fb:
 			dt_dict = {key: item['time'] for key, value in self.results_dict.items() for item in value['data']}
 		else:
 			dt_dict = {key: [post['date'] for post in thread['posts']] for key, thread in self.results_dict.items()}
@@ -337,7 +361,9 @@ class indicators:
 	#############################
 	
 	def add_topic_cluster(self):
-		pass
+		textdict = self.get_text_dict()
+		
+
 
 	def add_hazard_product_distance(self):
 		pass
