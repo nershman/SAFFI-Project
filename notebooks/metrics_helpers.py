@@ -2,16 +2,8 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-08 16:15:31
+# @Last Modified time: 2021-06-09 11:12:29
 """
-TODO: modify this to be a class where you first do 
-
-newthing = metrics_helpers.function(dict, fb=True) <- construct a new object where a certain dict is references/asgned at the construct
-then you just do
-newthing.add_variable()
-
-((then we can also just tokenize text once, and i guess provide options in initialization for that as well))
-
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
 https://scikit-learn.org/stable/modules/feature_extraction.html#text-feature-extraction
@@ -80,7 +72,7 @@ def clustering(text_dict, chosen_k = 10, n_features = 1000):
 	#TODO: return the fitted values (which cluster each item belongs to)
 	return custer_dict
 
-def LDA():
+def LDA(): #TODO
 
 	tf_vectorizer = CountVectorizer(max_df=0.5, min_df=2, max_features=n_features, 
                                 stop_words='english')
@@ -99,7 +91,7 @@ class indicators:
 	def __init__(self, results_dict, fb):
 		self.results_dict = results_dict
 		self.fb = fb
-		#TODO generate the strings 
+		self.text_dict = get_text_dict()
 
 	def get_dict(self, non_ind=True):
 		#TODO: if non_ind false then return only indicators
@@ -122,7 +114,7 @@ class indicators:
 		"""
 		For each key in a dict, add a new key to it's value (also a dict) named 'term_counts' containing a list thing.
 		"""
-		textdict = self.get_text_dict()
+		textdict = self.text_dict
 
 		fb_spars, term_counter = get_counts_from_text_dict(textdict)
 		fb_spars = fb_spars.toarray()
@@ -302,7 +294,7 @@ class indicators:
 		tag  posts language using package cld2
 		"""
 		#process text to single strings
-		textdict = self.get_text_dict()
+		textdict = self.text_dict
 
 		for key, value in textdict.items():
 			try:
@@ -326,7 +318,7 @@ class indicators:
 		We use MTLD instead. (we could also use HDD?)
 	
 		"""
-		textdict = self.get_text_dict()
+		textdict = self.text_dict
 
 		#generate TTF for each document or something....
 	
@@ -344,7 +336,7 @@ class indicators:
 		"""
 		Implement TTR just to see if its useful.
 		"""
-		textdict = self.get_text_dict() #TODO: UNTESTED
+		textdict = self.text_dict
 
 		#generate TTF for each document or something....
 	
@@ -364,7 +356,7 @@ class indicators:
 	#############################
 	
 	def add_topic_cluster(self):
-		textdict = self.get_text_dict()
+		textdict = self.text_dict
 		
 
 
