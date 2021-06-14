@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-09 11:12:29
+# @Last Modified time: 2021-06-10 12:44:58
 """
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -36,6 +36,21 @@ from datetime import datetime
 import pycld2 as cld2
 
 
+#CLUSTERING
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
+from sklearn import metrics
+from sklearn.datasets import fetch_20newsgroups
+from sklearn.pipeline import Pipeline
+
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.decomposition import NMF, LatentDirichletAllocation
+
+import numpy as np
+
+
 #TODO: convert the matrix fb_spars into a pandas dataframe 
 #NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 #https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
@@ -56,7 +71,7 @@ def get_counts_from_text_dict(text_dict):
 	#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 	#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 
-def clustering(text_dict, chosen_k = 10, n_features = 1000):
+def clustering(text_dict, chosen_k = 10, n_features = 1000): #FIXME not defined.
 	"""
 	chosen_k: int
 	"""
@@ -91,7 +106,7 @@ class indicators:
 	def __init__(self, results_dict, fb):
 		self.results_dict = results_dict
 		self.fb = fb
-		self.text_dict = get_text_dict()
+		self.text_dict = self.get_text_dict()
 
 	def get_dict(self, non_ind=True):
 		#TODO: if non_ind false then return only indicators
@@ -305,7 +320,15 @@ class indicators:
 			#dict of 'term':count for each document
 			self.results_dict[key]['post_language'] = details[0]
 		return
-		
+	
+	def add_newline_count(self): #TODO:UNTESTED #i think this is useful for facebook data.
+		"""
+		motivation posts on facebook with a lot of \n are usually selling stuff.
+		"""
+		textdict = self.text_dict
+
+		for key, value in textdict.items():
+			self.results_dict[key]['newline_count'] = len(re.findall('\n', textdict[key]))
 	
 	#TODO untested
 	def add_num_quotes(self): #ONLY netmums
