@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-10 12:44:58
+# @Last Modified time: 2021-06-15 12:14:25
 """
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -50,6 +50,8 @@ from sklearn.decomposition import NMF, LatentDirichletAllocation
 
 import numpy as np
 
+#MINIMUM WORD DISTANCE
+from itertools import product
 
 #TODO: convert the matrix fb_spars into a pandas dataframe 
 #NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
@@ -57,6 +59,39 @@ import numpy as np
 ################################
 # helper functions to class#
 ################################
+
+# functions for word distance
+
+def get_simple_distance(doc, product_list, hazard_list, type='min'):
+	"""
+	Document & product are a list of words.
+
+	Returns a distance measure for the selected words in a document.
+	"""
+	#get relevant terms in the document
+	products_intersect = set(product_list).intersection(doc)
+	hazards_intersect = set(hazard_list).intersection(doc)
+
+	#get indexes of relevant terms in document
+	prod_ind = {doc.index(term) for term in products_intersect}
+	haz_ind = {doc.index(term) for term in hazards_intersect}
+
+	#mean distance: find sequences of product-hazard pairs and the distance
+	#find the first p/h, then find the second p/h and match it and calc distance.
+	#continue to do this for each item.
+
+	#if a term doesn't appear, return NA.
+	if not (prod_ind and haz_ind):
+		return None
+
+	elif type == 'min':
+		vals = min(product(prod_ind, haz_ind), key=lambda t: abs(t[0]-t[1]))
+		return abs(vals[0]-vals[1])
+
+	elif type == 'mean':
+		pass #TODO
+
+#other things
 
 def get_counts_from_text_dict(text_dict):
 	"""
@@ -71,6 +106,7 @@ def get_counts_from_text_dict(text_dict):
 	#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 	#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 
+#TODO unfinished. theres version done inside a notebook tho.
 def clustering(text_dict, chosen_k = 10, n_features = 1000): #FIXME not defined.
 	"""
 	chosen_k: int
@@ -97,6 +133,7 @@ def LDA(): #TODO
                                 learning_method="batch").fit(tf)
 	lda_W = lda.transform(tf)
 	lda_H = lda.components_
+	return 
 
 class indicators:
 	"""
@@ -209,7 +246,6 @@ class indicators:
 	
 		return
 	
-	
 	def add_num_unique_posters(self):
 		names = {}
 		if self.fb:
@@ -275,7 +311,6 @@ class indicators:
 			self.results_dict[key]['avg_comment_length'] = item
 		return	
 	
-	
 	def add_avg_post_length(self):
 		if self.fb:
 			length_dict = {key: [len(item['text']) for item in value['data'] if item['text']] for key, value in self.results_dict.items()}
@@ -321,7 +356,7 @@ class indicators:
 			self.results_dict[key]['post_language'] = details[0]
 		return
 	
-	def add_newline_count(self): #TODO:UNTESTED #i think this is useful for facebook data.
+	def add_newline_count(self): #useful for facebook data.
 		"""
 		motivation posts on facebook with a lot of \n are usually selling stuff.
 		"""
@@ -378,8 +413,44 @@ class indicators:
 	## #MORE COMPLICATED METRICS#
 	#############################
 	
+	def add_term_distance_simple(self, product_list = None, hazard_list = None):
+		"""
+		Return mean distance between products and hazards
+		(note: minimum if mean is too much to implememnt...)
+		"""
+		if not product_list:
+			product_list = {substring.lower().strip() for item in scr.get_foods() for substring in item.split()}
+			product_list.remove('for')
+			product_list.remove('baby')
+
+		if not hazard_list:
+			hazard_list = {substring.lower().strip() for item in scr.get_concerns() for substring in item.split()}
+			hazard_list.remove('food')
+			hazard_list.remove('authority')
+			hazard_list.remove('vet')
+			hazard_list.remove('aromatic')
+			hazard_list.remove('european')
+			hazard_list.remove('a')
+			hazard_list.remove('safety')
+			hazard_list.remove('sweeteners') #not really sure about this one.
+			hazard_list.remove('modified')
+
+		#we make a document into a list, and then count the number of words between e.g "heavy metals" and "baby food"
+		textdict = {key: value.split() for key, value in self.text_dict.items()}
+
+		#run fn here
+		distance_dict = {key: get_simple_distance(value, product_list, hazard_list, type='min') for \
+							key, value in textdict.items()}
+
+		for key, value in distance_dict.items():
+			self.results_dict[key]['term_distance_simple'] = value
+
+		return
+
+
 	def add_topic_cluster(self):
-		textdict = self.text_dict
+		#textdict = self.text_dict
+		pass
 		
 
 
