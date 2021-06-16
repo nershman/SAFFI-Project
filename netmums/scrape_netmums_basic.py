@@ -2,12 +2,7 @@
 # @Author: sma
 # @Date:   2021-04-19 15:22:28
 # @Last Modified by:   sma
-# @Last Modified time: 2021-05-20 23:11:50
-
-#FIXME: quotes arent being recognized / handled properly and all of them are gettying bundled together as one text.
-	# - fix it so it just keeps the link to the original post? or some type of id or sth.
-	# - be able to handle multiple quotes.
-	# ONLY get the text of the relevant post.
+# @Last Modified time: 2021-06-16 20:09:57
 """
 This class builds a list of query URLs and gets the resulting URLs from the search results,
 number of results for each query, and possibly the blurb of each result.
