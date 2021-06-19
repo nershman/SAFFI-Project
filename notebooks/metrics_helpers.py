@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-15 12:14:25
+# @Last Modified time: 2021-06-16 11:05:38
 """
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -462,3 +462,18 @@ class indicators:
 	
 	def add_transitivity_score(self):
 		pass	
+
+
+## SIMPLE THINGS
+
+	def add_subforum(): #netmums
+		pass
+
+	def add_subsubforum(): #netmum
+		pass
+
+	def add_num_quotes_with_author():
+		pass
+
+	def add_num_quotes_without_author():
+		pass
