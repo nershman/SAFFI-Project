@@ -19,11 +19,22 @@ class fuzzy_typos:
 		"""
 		# generate a dict of acceptable interval sizes.
 		self.vocabulary = {i: ((1-size)*len(i), (1+size)*len(i)) for i in vocabulary}
+
+	#TODO: UNTESTED
+	def replace(self, text):
+		"""
+		attempt to prevent phrases from not getting matched and replace
+		however it will not work with phrases that contain typos!
+		"""
+		for item in self.vocabulary:
+			text = re.sub(item, re.sub(' ', '_', item), text)
+		return text
 	
-	def fix_typos(self, text, cutoff=80):
+	def fix_typos(self, text, replacement = None, cutoff=80):
 		"""
 		vocabulary : a list of strings (tokens)
 		term: a string which exists in vocabulary
+		replace: a string which all matche vocabularyw ill get replaced with.
 		cutoff: number between 0 and 100. See fuzzywuzzy documentation for more info.
 	
 		Note: does not handle words at end of sentence properly (period on last word)
@@ -35,7 +46,7 @@ class fuzzy_typos:
 		#separate sentences
 		sentence_separators = re.findall('[\n?!.]+', text) + ['']
 		sentences = re.split('[\n?!.]+', text)
-		#edege case thing.
+		#edge case thing.
 		if not sentences[-1]:
 			del sentences[-1]
 
@@ -50,9 +61,14 @@ class fuzzy_typos:
 				#compare using levenshtein distance (requires fuzzywuzzy and python-levenshtein)
 				results = process.extractBests(term,candidates, limit=None, score_cutoff=cutoff, scorer=fuzz.ratio)		
 				#update tokens
-				for match in results:
-					tokens[match[2]] = term
-					repaired.add(match[2]) #add to the list of indexes of fixed typos
+				if not replacement:
+					for match in results:
+						tokens[match[2]] = term
+						repaired.add(match[2]) #add to the list of indexes of fixed typos
+				else:
+					for match in results:
+						tokens[match[2]] = replacement
+						repaired.add(match[2])
 			if tokens:
 				sent = ' '.join(tokens)
 				#join sentences back together
@@ -60,4 +76,9 @@ class fuzzy_typos:
 
 		return text
 
+	def replace_words(self, text, replacement):
+		"""
+		This is to replace words in our texts
+		word is a single string.
+		"""
 
