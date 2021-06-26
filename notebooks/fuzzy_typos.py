@@ -21,14 +21,14 @@ class fuzzy_typos:
 		self.vocabulary = {i: ((1-size)*len(i), (1+size)*len(i)) for i in vocabulary}
 
 	#TODO: UNTESTED
-	def replace(self, text):
-		"""
-		attempt to prevent phrases from not getting matched and replace
-		however it will not work with phrases that contain typos!
-		"""
-		for item in self.vocabulary:
-			text = re.sub(item, re.sub(' ', '_', item), text)
-		return text
+#	def replace(self, text):
+#		"""
+#		attempt to prevent phrases from not getting matched and replace
+#		however it will not work with phrases that contain typos!
+#		"""
+#		for item in self.vocabulary:
+#			text = re.sub(item, re.sub(' ', '_', item), text)
+#		return text
 	
 	def fix_typos(self, text, replacement = None, cutoff=80):
 		"""
@@ -75,10 +75,13 @@ class fuzzy_typos:
 				text += sent + sentence_separators[ind] + ' '
 
 		return text
+#TODO: UNTESTED
+def replace_words(replacement, replaced, text):
+	"""
+	Concatenate a list with | for use with re.sub().
+	"""
+	return re.sub(replacements, '|'.join(replaced), text)
 
-	def replace_words(self, text, replacement):
-		"""
-		This is to replace words in our texts
-		word is a single string.
-		"""
-
+def replace_many(list_of_replacements, list_of_replaced, text):
+	if len(list_of_replacements)
+	#this is supposed to do it for all things to replace.
