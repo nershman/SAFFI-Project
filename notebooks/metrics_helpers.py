@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-06-16 11:05:38
+# @Last Modified time: 2021-07-06 16:40:11
 """
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -53,7 +53,7 @@ import numpy as np
 #MINIMUM WORD DISTANCE
 from itertools import product
 
-#TODO: convert the matrix fb_spars into a pandas dataframe 
+
 #NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 #https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 ################################
@@ -98,11 +98,10 @@ def get_counts_from_text_dict(text_dict):
 	Takes a dict  of keys of URLs and value as string.
 	"""
 	vocab = scr.get_concerns() + scr.get_foods()
-	vocab = {substring.lower().strip() for item in vocab for substring in item.split()}
+	vocab = {substring.lower().strip() for item in vocab for substring in item.split()} #this is suffiient for compatibility w countvectorizer.
 	term_counter = CountVectorizer(vocabulary = vocab, stop_words = 'english')
 	return term_counter.fit_transform(text_dict.values()), term_counter
 
-	#TODO: convert the matrix fb_spars into a pandas dataframe 
 	#NOTE: From Python 3.6 onwards, the standard dict type maintains insertion order by default.
 	#https://stackoverflow.com/questions/1867861/how-to-keep-keys-values-in-same-order-as-declared
 
@@ -161,6 +160,23 @@ class indicators:
 			regex = r'http\S+'
 			text_dict = {key: re.sub(regex, '', value) for key, value in text_dict.items()}
 		return text_dict
+
+	def get_posts_dict(self, remove_links = False):
+		"""
+		Returns dict where key is URL post number pair so posts are easier to iterate over. Discards thread information which is not held in post-list object.
+		"""
+		if self.fb:
+			pass #TODO
+		else:
+			posts_dict = {(key,n): item for key, value in self.results_dict.items() for n, item in enumerate(value['posts'])}
+			#add the title to the first post in each of them
+			for url in self.results_dict.keys():
+				posts_dict[(url, 0)]['body'] = self.results_dict[url]['title'] + posts_dict[(url, 0)]['body']
+		#if remove_links: #TODO
+		#	regex = r'http\S+'
+		#	posts_dict = {key: re.sub(regex, '', value) for key, value in posts_dict.items()}
+		return posts_dict
+
 
 	def add_term_counts(self):
 		"""
