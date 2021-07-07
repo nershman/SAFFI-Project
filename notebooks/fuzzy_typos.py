@@ -22,7 +22,7 @@ def parallel_replace():
 	pass
 
 class fuzzy_typos:
-	def __init__(self, vocabulary, replacement = None, size = 0.3):
+	def __init__(self, vocabulary, replacement = None, size = 0.3, cleaner=None):
 	
 		"""
 		size: percent larger or smaller a word can be to be checked for a match
@@ -35,6 +35,8 @@ class fuzzy_typos:
 			replacement = {to_replace:replacement_word for replacement_word, set_to_replace in replacement.items() for to_replace in set_to_replace}
 		self.replacement = replacement
 
+		self.cleaner = cleaner
+
 	def _intersperse(self, lst, item):
 		"""
 		Helper function which adds underscores between a list of words.
@@ -46,8 +48,9 @@ class fuzzy_typos:
 		result[0::2] = lst
 		return result
 
-	def fix_typos(self, text, replacement = None, cutoff=80):
+	def fix_typos(self, text, replacement = None, cutoff=80, cleaner = None):
 		"""
+		#TODO UPDATE DESCRIPTION
 		vocabulary : a list of strings (tokens)
 		term: a string which exists in vocabulary
 		replacement: a string which all matche vocabulary will get replaced with. 
@@ -60,7 +63,12 @@ class fuzzy_typos:
 
 		If all words are tokens (no phrases/spaces in words) then a replacement can be specified to save time over using the class, replacement.
 		"""
-		#assume text has already been cleaned.
+		#if a cleaning function was specificed then use it.
+		if cleaner:
+			text = cleaner(text)
+		elif self.cleaner:
+			text = self.cleaner(text)
+
 		#separate sentences
 		sentence_separators = re.findall('[\n?!.]+', text) + ['']
 		sentences = re.split('[\n?!.]+', text)
