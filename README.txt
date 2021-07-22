@@ -10,7 +10,7 @@ NOTE: at the moment this is off the top of my head so might not be 100% accurate
 -- facebook: data collection --
 
 2) RUN specific_fb_groups.py, specific_fb_pages.py, fb_searchscrape_manuallinks.py, extract_links_from_html.py
-	SAVES: fb_data_searchscrape.pkl, specific_fb_groups.pkl, specific_fb_pages.py, specific_fb_pages.pkl 
+	SAVES: fb_data_searchscrape.pkl, specific_fb_groups.pkl, specific_fb_pages.pkl, manual_search_resdict.pkl
 3) RUN clean_fb.py, it SAVES fb_merged_cleaned_flat.pkl
 
 -- netmums:cleaning --
@@ -121,7 +121,7 @@ DESCRIPTION:
 		open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/netmums_subset_keys.txt
 
 .//notebooks/word2vecphrases.ipynb
-DESCRIPTION: 
+DESCRIPTION: Builds a word2vec model and look close/similar words (cosine distance) to our products and hazards
 READ	open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/allposts_rerun.pkl
 READ	open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/netmums_subset_keys.txt
 
@@ -132,7 +132,7 @@ READ	open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/allposts_rer
 READ	open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/netmums_subset_keys.txt
 		
 .//notebooks/test_typostuff.ipynb
-DESCRIPTION: 
+DESCRIPTION: debug / testing of fuzzy_typo class
 READ	open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/allposts_rerun.pkl
 
 .//notebooks/indicators.ipynb
@@ -161,10 +161,11 @@ READs	open('manual_search_resdict.pkl
 SAVES fb_data_searchscrape.pkl
 		
 .//facebook/specific_fb_groups.py:
-DESCRIPTION:
+DESCRIPTION: scrape specific fb groups
 SAVES	open('specific_fb_groups.pkl
 		
 .//facebook/specific_fb_pages.py:
+DESCRIPTION: scrape specific fb pages
 SAVES	open('specific_fb_pages.pkl
 		
 .//facebook/extract_links_from_html.py:
@@ -205,26 +206,34 @@ DESCRIPTION:
 
 .//netmums/testingfunctions.py:
 DESCRIPTION:
-REAADs	open('../basicblurbs.pkl
+READs	open('../basicblurbs.pkl
 
 
 ### PICKLE DESCRIPTIONS ###
 
+#IMPORTANT ONES#
 
-allposts_rerun.pkl <- reran scrape after detecting error in data.
+basicblurbs.pkl - netmums scrape data, only from the results page. queries, results, and text preview blurb.
+allposts_rerun.pkl - netmums scrape data
+allposts.pkl -- OLD version of allposts_rerun
+fb_data_searchscrape.pkl -- facebook scrape based on links found searching google
+specific_fb_groups.pkl -- fb scrape of specific facebook groups
+specific_fb_pages.pkl -- fb scrape of specific facebook pages
+manual_search_resdict.pkl -- extracted links from google searches, and the queries which returned that result
+untypod_dict.pkl - netmums data dict cleaned, subset taken, and typos removed
 
-allposts.pkl & allposts2.pkl <- old bad scrape. TODO: delete allposts2, delete allposts.pkl, after confirming files arent referenced in any notebooks AND RENAMING allposts_rerun TO allposts.pkl
+#LESS IMPORTANT#
 
+FULL_untypod_dict.pkl - netmums data, entire set, typos removed
 
+#UNIMPORTANT#
 
-
-#MISC THINGS FROM GREP
-
-.//notebooks/netmums_quotes.ipynb:open('netmums_subset_keys.txt
-.//notebooks/netmums_clean_final_final.ipynb:open('netmums_subset_keys.txt
-.//notebooks/NETMUMS-topicmining-THREADS.ipynb:internship/scrape-git/netmums/netmums_subset_keys.txt
-.//notebooks/word2vecphrases-ENTIREDATASET.ipynb:internship/scrape-git/netmums/netmums_subset_keys.txt
-.//notebooks/netmums_clean_final.ipynb:open('netmums_subset_keys.txt
-.//notebooks/NETMUMS-topicmining-POSTS.ipynb:internship/scrape-git/netmums/netmums_subset_keys.txt
-.//notebooks/word2vecphrases.ipynb:internship/scrape-git/netmums/netmums_subset_keys.txt
-.//notebooks/FULL-NETMUMS-topicmining-THREADS.ipynb:internship/scrape-git/netmums/netmums_subset_keys.txt
+fb_search_results.pkl - failed attempt at facebook scrape
+fb_merged_cleaned_flat.pkl - the 4 relevant facebook pkls cleaned and merged into one dict
+BKP-untypod_dict.pkl - backup
+bkp-FULL_untypod_dict.pkl - backup
+basicblurbs2.pkl - ??
+basicblurbs.pkl - preliminary scrape of just blurbs
+astype_copy.pkl - ???
+fb_safety.pkl - ???
+fb_merged_cleaned.pkl - old version of fb_merged_cleaned_flat.pkl, probably can be deleted.
