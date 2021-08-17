@@ -57,7 +57,6 @@ class fuzzy_typos:
 				   :OR a dict with key=replacement term, value= set of terms to replace
 		cutoff: number between 0 and 100. See fuzzywuzzy documentation for more info.
 	
-		Note: does not handle words at end of sentence properly (period on last word)
 	
 		String text will be split into sentences and processed, replacing typos in each sentence and then joined back together.
 
