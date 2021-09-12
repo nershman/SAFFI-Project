@@ -27,7 +27,8 @@ UNFINSHED. hehe
 }
 	
 #NETMUMS DATA
-#we have a list of post dict.
+#we have a list of post dict, where each post_dict is
+
 post_dict = {'username': get_post_username(post_soup),
 				'likes': get_post_likes(post_soup),
 				'date': get_post_date(post_soup),
@@ -36,7 +37,7 @@ post_dict = {'username': get_post_username(post_soup),
 				'body':body_text,
 				'body_urls':body_urls}
 
-##FACEBOOK DATA
+##FACEBOOK DATA (examples)
 
 pprint(fb_search[list(fb_search.keys())[1]])
 >
