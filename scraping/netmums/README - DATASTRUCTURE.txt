@@ -12,18 +12,18 @@ search scrape:
 }
 
 reformatted search scrape:
-key is the link url (rather than query!)
-UNFINSHED. hehe
+When doing the second step of netmums scrape, getting full thread data from URLs, 
+the organization is modified: instead of search query being the dict key, link url becomes the dict key.
+This is to remove duplicate URLs
 
-{'str_of_linkurl':		#title attrib gets updated
+
+{'url_string':		#title attrib gets updated
 		{'title':str, 'query':(set of queryURLS where the link appeared),
 		 'posts':[
 		 				{'author':str, 'likes':str, 'body':str, 'quotes_y':[{author:str,text:str}], 'quotes_w:'[str], 'urls':[str]}
 
 		 		 ]
 		}
-
-
 }
 	
 #NETMUMS DATA
