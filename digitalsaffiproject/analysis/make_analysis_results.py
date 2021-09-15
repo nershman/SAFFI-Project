@@ -1,14 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
-### Term Counting Approach
-# In[88]:
-
-
-#if jupyternotify is installed, we can add %notify to a cell to get an alert when it ifnished running
-get_ipython().run_line_magic('load_ext', 'jupyternotify')
-
-
-# In[89]:
+### RUN FILE WITH:
+#
+# python NETMUMS-topicmining-POSTS-NEW.py --input 'path/to/picklefile.pkl' --output 'path/to/output-folder/'
 
 
 import metrics_helpers as indicators
@@ -21,7 +15,32 @@ import pandas as pd
 import traceback #needed to store full error tracebacks
 
 
-# In[90]:
+import matplotlib
+matplotlib.use('Agg')
+
+
+# In[3]:
+
+
+from pathlib import Path
+import os
+
+
+
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--input')
+parser.add_argument('-o', '--output')
+args = parser.parse_args()
+
+input_file = args.input # '/Users/sma/Documents/INRAE internship/scrape-git/facebook/untypod_dict.pkl'
+file_location = args.output  #'/Users/sma/Documents/INRAE internship/temppics/'
+
+
+
+# In[4]:
 
 
 def dt_to_int(dt): #datetime to integer
@@ -30,21 +49,15 @@ def dt_to_int(dt): #datetime to integer
 
 # #### Load Data and Prepare Functions
 
-# In[91]:
+# In[6]:
 
 
-with open('/Users/sma/Documents/INRAE internship/scrape-git/facebook/untypod_dict.pkl', 'rb') as f:
-    netmums = pk.load(f)
-
-#with open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/allposts_rerun.pkl', 'rb') as f:
-#    netmums = pk.load(f)
-    
-#with open('/Users/sma/Documents/INRAE internship/scrape-git/netmums/netmums_subset_keys.txt', 'r') as f:
-#    keys = [url.strip() for url in f.readlines()]
-        
+with open(input_file, 'rb') as f:
+    netmums = pk.load(f)      
+#FIXME: modify location of untypod_dict !
 
 
-# In[92]:
+# In[7]:
 
 
 nm_ind = indicators.indicators(netmums, fb=False)
@@ -53,7 +66,7 @@ nm_ind = indicators.indicators(netmums, fb=False)
 posts_dict = nm_ind.get_posts_dict()
 
 
-# In[93]:
+# In[8]:
 
 
 hazards = {
@@ -115,7 +128,7 @@ hazards = {key.lower():[v.lower() for v in value] + [key.lower()] for key,value 
 products = {key.lower():[v.lower() for v in value]+[key.lower()] for key,value in products.items()}
 
 
-# In[94]:
+# In[9]:
 
 
 
@@ -143,7 +156,7 @@ extras = {'baby_food_brands':
          }
 
 
-# In[95]:
+# In[10]:
 
 
 import re
@@ -184,7 +197,7 @@ def make_underscores(item):
     #TODO this would be cleaner if i just check that it's iterable, and then check that it's a string.
 
 
-# In[96]:
+# In[11]:
 
 
 #from the dict which representes our subcategories, create lists of all words in the subcategories.
@@ -195,7 +208,7 @@ e = [item for val in extras.values() for item in val]
 
 # #### Generate & Process Text Dict
 
-# In[97]:
+# In[12]:
 
 
 
@@ -215,7 +228,7 @@ for key in text_dict:
 
 # #### Run Vectorizers
 
-# In[98]:
+# In[13]:
 
 
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -263,7 +276,7 @@ noundf_counts = noun_counter_maxdf.fit_transform(text_dict.values())
 #note that hyphens will be treated as spaces by countvectorizer
 
 
-# In[99]:
+# In[14]:
 
 
 def dict_from_arr(counts, counter, the_dict:dict): #recent change: i made the_dict an item in function.
@@ -275,26 +288,26 @@ def dict_from_arr(counts, counter, the_dict:dict): #recent change: i made the_di
     return count_dict
 
 
-# In[100]:
+# In[15]:
 
 
 countdf = pd.DataFrame.from_dict(dict_from_arr(counts, term_counter, text_dict)).transpose()
 countdf
 
 
-# In[101]:
+# In[16]:
 
 
 maxcountdf = pd.DataFrame.from_dict(dict_from_arr(max_counts, all_term_counter_max, text_dict)).transpose()
 
 
-# In[102]:
+# In[17]:
 
 
 maxdfcountdf = pd.DataFrame.from_dict(dict_from_arr(maxdf_counts, all_term_counter_maxdf, text_dict)).transpose()
 
 
-# In[103]:
+# In[18]:
 
 
 noundfcountdf = pd.DataFrame.from_dict(dict_from_arr(noundf_counts, noun_counter_maxdf, text_dict)).transpose()
@@ -306,16 +319,19 @@ noundfcountdf = pd.DataFrame.from_dict(dict_from_arr(noundf_counts, noun_counter
 # if terms are indepndent of their related terms thsi is not bad, it means they are finding extra posts.
 # if terms are correlated with tehir related terms this is not bad and indicates the terms are used in the same post.
 
-# In[104]:
+# In[19]:
 
 
-sns.set(rc={'figure.figsize':(5,4)})
-sns.heatmap(countdf[make_underscores(h)].corr().dropna(axis=0, how='all').dropna(axis=1,how='all'),             cmap= "vlag", center=0.00, xticklabels=True, yticklabels=True)
+sns.set(rc={'figure.figsize':(8,7)})
+fig = sns.heatmap(countdf[make_underscores(h)].corr().dropna(axis=0, how='all').dropna(axis=1,how='all'),             cmap= "vlag", center=0.00, xticklabels=True, yticklabels=True)
+plt.title('Individual Hazard Search Terms')
+os.makedirs(Path(file_location + 'heatmaps'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'heatmaps/individual_terms.png'), bbox_inches="tight")
 
 
 # #### Create a by-Sentence dict (for Sentence-Post Mixed Effect Regression Model way at the bottom)
 
-# In[105]:
+# In[20]:
 
 
 def split_sentences(text:str):
@@ -329,7 +345,7 @@ sent_dict = {(key[0], key[1], ind): sent for key,value in text_dict.items() for 
 
 # ##### Run the same vectorization and generate DataFrame
 
-# In[106]:
+# In[21]:
 
 
 sent_counts = term_counter.fit_transform(sent_dict.values())
@@ -339,13 +355,13 @@ sent_counts = term_counter.fit_transform(sent_dict.values())
 sent_noundf_counts = noun_counter_maxdf.fit_transform(sent_dict.values())
 
 
-# In[107]:
+# In[22]:
 
 
 sent_df = pd.DataFrame.from_dict(dict_from_arr(sent_counts, term_counter, sent_dict)).transpose()
 
 
-# In[108]:
+# In[23]:
 
 
 sent_noun_df = pd.DataFrame.from_dict(dict_from_arr(sent_noundf_counts, noun_counter_maxdf, sent_dict)).transpose()
@@ -353,7 +369,7 @@ sent_noun_df = pd.DataFrame.from_dict(dict_from_arr(sent_noundf_counts, noun_cou
 
 # ### Check Correlations from Counts (for Post dataframe)
 
-# In[109]:
+# In[24]:
 
 
 def get_relevant_correlations(corr_data: pd.DataFrame, p_values: pd.DataFrame, alpha=0.05, cutoff = 0.1):
@@ -375,15 +391,18 @@ def get_relevant_correlations(corr_data: pd.DataFrame, p_values: pd.DataFrame, a
     return grouped_series, grouped_p_values
 
 
-# In[110]:
+# In[25]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(7,4)})
-sns.heatmap(countdf.corr().loc[make_underscores(p), make_underscores(h)].dropna(axis=0, how='all').dropna(axis=1,how='all'),            cmap= "vlag", vmax=1.0, vmin=-1.0, center=0.00, xticklabels=True, yticklabels=True)
+fig = sns.heatmap(countdf.corr().loc[make_underscores(p), make_underscores(h)].dropna(axis=0, how='all').dropna(axis=1,how='all'), cmap= "vlag", vmax=1.0, vmin=-1.0, center=0.00, xticklabels=True, yticklabels=True)
 plt.title('Products & Hazards')
 
+os.makedirs(Path(file_location + 'heatmaps'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'heatmaps/prod_haz.png'), bbox_inches="tight")
 
-# In[111]:
+
+# In[26]:
 
 
 from scipy.stats import pearsonr
@@ -399,7 +418,7 @@ def calculate_pvalues(df):
     return pvalues
 
 
-# In[112]:
+# In[27]:
 
 
 #p-values
@@ -409,16 +428,14 @@ correlation_data = countdf.corr().loc[make_underscores(p), make_underscores(h)].
 corr_list, p_list = get_relevant_correlations(correlation_data, p_value_data)
 
 
-# In[113]:
+# In[28]:
 
 
-[print(i.to_latex()) for i in corr_list]
+tex = '\n'.join([i.to_latex() for i in corr_list])
 
-
-# In[114]:
-
-
-corr_list
+os.makedirs(Path(file_location + 'correlation'), exist_ok=True)
+with open(Path(file_location + 'correlation/prod_haz_corr.tex'), 'w') as f:
+        f.write(tex)
 
 
 # In[ ]:
@@ -427,8 +444,7 @@ corr_list
 
 
 
-# In[115]:
-
+# In[29]:
 
 
 temp_concat_df = pd.concat([countdf, maxcountdf], axis=1)
@@ -440,25 +456,21 @@ p_value_data = calculate_pvalues(temp_concat_df).loc[maxcountdf.columns, make_un
 
 corr_list, p_list = get_relevant_correlations(correlation_data, p_value_data)
 
-[print(i.to_latex()) for i in corr_list]
+
+# In[30]:
+
+
+tex = '\n'.join([i.to_latex() for i in corr_list])
+
+os.makedirs(Path(file_location + 'correlation'), exist_ok=True)
+with open(Path(file_location + 'correlation/hazard_maxcountofftopic.tex'), 'w') as f:
+        f.write(tex)
 #sns.set(rc={'figure.figsize':(17,5)})
 #sns.heatmap(temp_concat_df.corr().loc[make_underscores(h), maxcountdf.columns].dropna(axis=0, how='all').dropna(axis=1,how='all'), \
 #            cmap= "vlag", vmax=1.0, vmin=-1.0, center=0.00, xticklabels=True, yticklabels=True)
 
 
-# In[116]:
-
-
-p_value_data
-
-
-# In[117]:
-
-
-p_list
-
-
-# In[118]:
+# In[31]:
 
 
 temp_concat_df = pd.concat([countdf, maxdfcountdf], axis=1)
@@ -470,20 +482,20 @@ p_value_data = calculate_pvalues(temp_concat_df).loc[maxdfcountdf.columns, make_
 
 corr_list, p_list = get_relevant_correlations(correlation_data, p_value_data)
 
-[print(i.to_latex()) for i in corr_list]
+
+
+tex = '\n'.join([i.to_latex() for i in corr_list])
+
+os.makedirs(Path(file_location + 'correlation'), exist_ok=True)
+with open(Path(file_location + 'correlation/hazard_maxdfcountofftopic.tex'), 'w') as f:
+        f.write(tex)
 #sns.set(rc={'figure.figsize':(17,6)})
 #sns.heatmap(temp_concat_df.corr().loc[make_underscores(h), maxdfcountdf.columns].dropna(axis=0, how='all').dropna(axis=1,how='all'), \
 #            cmap= "vlag", vmax=1.0, vmin=-1.0, center=0.00, xticklabels=True, yticklabels=True)
 #plt.title('Hazards & TF-IDF Filtered Counts')
 
 
-# In[119]:
-
-
-[display(i) for i in corr_list]
-
-
-# In[120]:
+# In[32]:
 
 
 temp_concat_df = pd.concat([countdf, noundfcountdf], axis=1)
@@ -495,28 +507,32 @@ temp_concat_df = temp_concat_df.loc[:,~temp_concat_df.columns.duplicated()]
 #plt.title('Hazards & Noun + DF Filtered Counts')
 
 
-# In[121]:
+# In[33]:
 
 
 correlation_data = temp_concat_df.corr().loc[noundfcountdf.columns, make_underscores(h)].dropna(axis=0, how='all').dropna(axis=1,how='all')
 p_value_data = calculate_pvalues(temp_concat_df).loc[noundfcountdf.columns, make_underscores(h)].dropna(axis=0, how='all').dropna(axis=1,how='all')
 
 
-# In[122]:
+# In[34]:
 
 
 corr_list, p_list = get_relevant_correlations(correlation_data, p_value_data)
 
 
-# In[123]:
+# In[35]:
 
 
-[print(i.to_latex()) for i in corr_list]
+tex = '\n'.join([i.to_latex() for i in corr_list])
+
+os.makedirs(Path(file_location + 'correlation'), exist_ok=True)
+with open(Path(file_location + 'correlation/hazard_nouncountofftopic.tex'), 'w') as f:
+        f.write(tex)
 
 
 # ## Join Data into Single DataFrame
 
-# In[124]:
+# In[36]:
 
 
 summed_df = pd.DataFrame()
@@ -533,7 +549,7 @@ for key in extras.keys():
 # 
 # Idea: we only want to count mentions of fruit in the context of baby food. So we take the count of fruit and multiply it by the whether the mentions of baby are non-zero or not.
 
-# In[125]:
+# In[37]:
 
 
 #count mentions of fruit or vegetable
@@ -549,13 +565,13 @@ summed_df['veg_in_baby_context'] = summed_df['vegetable']  * (summed_df[['baby_f
 summed_df['baby_food_uncategorized'] = (summed_df[['fruit','vegetable']].sum(axis=1) > 0) * summed_df['baby_food_brands']
 
 
-# In[126]:
+# In[38]:
 
 
 class_df = summed_df.copy()
 
 
-# In[127]:
+# In[39]:
 
 
 product_cols = list(products.keys()) + ['veg_in_baby_context', 'fruit_in_baby_context', 'baby_food_uncategorized']
@@ -563,7 +579,7 @@ product_cols = list(products.keys()) + ['veg_in_baby_context', 'fruit_in_baby_co
 
 # ### Repeat for the Sentence DF
 
-# In[128]:
+# In[40]:
 
 
 summed_sent_df = pd.DataFrame()
@@ -590,7 +606,7 @@ class_sent_df = summed_sent_df.copy()
 
 # ## Count Approach
 
-# In[129]:
+# In[41]:
 
 
 #classify
@@ -602,7 +618,7 @@ class_df.loc[class_df[product_cols].max(axis=1) == 0,'product_type'] = 'NA'
 class_df['product_type'] = class_df['product_type'].astype('category')
 
 
-# In[130]:
+# In[42]:
 
 
 #make classification for hazards and check it as well.
@@ -613,7 +629,7 @@ class_df['hazard_type'] = class_df['hazard_type'].astype('category')
 
 # ### Repeat for Sent DF
 
-# In[131]:
+# In[43]:
 
 
 
@@ -631,7 +647,7 @@ class_sent_df['hazard_type'] = class_sent_df['hazard_type'].astype('category')
 
 # #### Total Count
 
-# In[132]:
+# In[44]:
 
 
 #note: we have classified hazards but for this section it is not useful to look at, 
@@ -639,110 +655,105 @@ class_sent_df['hazard_type'] = class_sent_df['hazard_type'].astype('category')
 class_df['hazard_type'].value_counts()
 
 
-# In[133]:
+# In[45]:
 
-
-class_df[product_cols].sum(axis=0).plot(kind='barh')
-plt.title('Total occurences of words corresponding to _____')
-plt.show()
-sns.heatmap(class_df[product_cols].corr(), cmap= "vlag", center=0.00)
+plt.clf()
+fig = class_df[product_cols].sum(axis=0).plot(kind='barh')
 plt.title('Total occurences of words corresponding to _____')
 plt.show()
 
-
-# In[134]:
-
-
-sns.pairplot(class_df[product_cols])
+os.makedirs(Path(file_location + 'counts'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'counts/product_total_occurence.png'), bbox_inches="tight")
+plt.clf()
+fig = sns.heatmap(class_df[product_cols].corr(), cmap= "vlag", center=0.00)
+plt.title('Total occurences of words corresponding to _____')
+plt.show()
+os.makedirs(Path(file_location + 'counts'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'counts/product_tot_occurence_corr.png'), bbox_inches="tight")
 
 
 # #### Number of Posts Containing an Occurence
 
-# In[135]:
+# In[46]:
 
-
-(class_df[product_cols] > 0).sum(axis=0).plot(kind='barh')
+plt.clf()
+fig = (class_df[product_cols] > 0).sum(axis=0).plot(kind='barh')
+plt.title('Total number of posts containing _____')
 plt.show()
-sns.heatmap((class_df[product_cols] > 0).corr(), cmap= "vlag", center=0.00)
+os.makedirs(Path(file_location + 'counts'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'counts/product_num_posts.png'), bbox_inches="tight")
+plt.clf()
+fig = sns.heatmap((class_df[product_cols] > 0).corr(), cmap= "vlag", center=0.00)
+plt.title('Total number of posts containing _____')
 plt.show()
+os.makedirs(Path(file_location + 'counts'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'counts/product_num_posts_corr.png'), bbox_inches="tight")
 
 
 # # Check the Classification
 
-# In[660]:
+# In[47]:
 
 
 class_df['hazard_type'].value_counts()
 
 
-# In[657]:
+# In[48]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
-class_df['hazard_type'].value_counts().plot.barh(title='classification'+ ' (log scale)', log=True)
+fig = class_df['hazard_type'].value_counts().plot.barh(title='classification'+ ' (log scale)', log=True)
+plt.show()
+os.makedirs(Path(file_location + 'classification'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'classification/hazard_log.png'), bbox_inches="tight")
 
 
-# In[136]:
+# In[49]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
-class_df['product_type'].value_counts().plot.barh(title = 'classification')
+fig = class_df['product_type'].value_counts().plot.barh(title = 'classification')
 plt.show()
 
-class_df['product_type'].value_counts().plot.barh(title='classification'+ ' (log scale)', log=True)
+os.makedirs(Path(file_location + 'classification'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'classification/product.png'), bbox_inches="tight")
+
+plt.clf()
+fig = class_df['product_type'].value_counts().plot.barh(title='classification'+ ' (log scale)', log=True)
+
+plt.show()
+os.makedirs(Path(file_location + 'classification'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'classification/product_log.png'), bbox_inches="tight")
 
 
 # ## Hazard Occurences by Product Class
 
 # ### Number of Occurences
 
-# In[137]:
+# In[50]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(5,20)})
-pd.DataFrame({category:class_df.loc[class_df.product_type == category][hazards.keys()].sum(axis=0) for category in class_df['product_type'].value_counts().index}).plot.barh(width=1.2,log=True)
-plt.title('Number of Occurences (by Post)')
+fig = pd.DataFrame({category:class_df.loc[class_df.product_type == category][hazards.keys()].sum(axis=0) for category in class_df['product_type'].value_counts().index}).plot.barh(width=1.2,log=True)
+plt.title('Number of Occurences')
 
-
-# In[138]:
-
-
-for category in list(class_df['product_type'].value_counts().index): #get the non-zero labels (zero labels may create an error)
-        
-    non_nan_correlation = class_df.loc[class_df.product_type == category][hazards.keys()].corr()#.dropna(axis=1, how='all').dropna(axis=0, how='all')
-    try:
-        sns.heatmap(non_nan_correlation, cmap= "vlag", center=0.00, xticklabels=True, yticklabels=True)
-        plt.title('Non-NaN Correlations for ' + str(category))
-        plt.show()
-    except ValueError:
-        print('[insufficient data to render %s plot! ]' % (category))
+plt.show()
+os.makedirs(Path(file_location + 'classification'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'classification/prod_occurences_by_hazard.png'), bbox_inches="tight")
 
 
 # ### Number of Posts Containing an Occurence
 
-# In[139]:
+# In[51]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(5,20)})
-pd.DataFrame({category:(class_df.loc[class_df.product_type == category][hazards.keys()] > 0).sum(axis=0) for category in class_df['product_type'].value_counts().index}).plot.barh(width=1.2,log=True)
+fig = pd.DataFrame({category:(class_df.loc[class_df.product_type == category][hazards.keys()] > 0).sum(axis=0) for category in class_df['product_type'].value_counts().index}).plot.barh(width=1.2,log=True)
 plt.title('Number of Posts containing')
 
-
-# In[140]:
-
-
-sns.set(rc={'figure.figsize':(5,4)})
-for category in list(class_df['product_type'].value_counts().index): #get the non-zero labels (zero labels may create an error)
-    num_of_posts = class_df.loc[class_df.product_type == category][hazards.keys()] > 0
-        
-    non_nan_correlation = num_of_posts.corr()#.dropna(axis=1, how='all').dropna(axis=0, how='all')
-    try:
-        sns.heatmap(non_nan_correlation, cmap="vlag", center=0.00,xticklabels=True, yticklabels=True)
-
-        plt.title('Non-NaN Correlations for ' + str(category))
-        plt.show()
-    except ValueError:
-        print('[insufficient data to render %s plot! ]' % (category))
+plt.show()
+os.makedirs(Path(file_location + 'classification'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'classification/prod_occurences_by_hazard_numposts.png'), bbox_inches="tight")
 
 
 # In[ ]:
@@ -771,7 +782,7 @@ for category in list(class_df['product_type'].value_counts().index): #get the no
 # 
 # more details: https://github.com/cjhutto/vaderSentiment#about-the-scoring
 
-# In[142]:
+# In[52]:
 
 
 from nltk.classify import NaiveBayesClassifier
@@ -781,14 +792,14 @@ from nltk.sentiment.util import *
 from nltk import tokenize
 
 
-# In[143]:
+# In[53]:
 
 
 nltk.download('punkt')
 nltk.download('vader_lexicon')
 
 
-# In[144]:
+# In[54]:
 
 
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -797,7 +808,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 sid = SentimentIntensityAnalyzer()
 
 
-# In[145]:
+# In[55]:
 
 
 def nltk_sentiments(text):
@@ -823,7 +834,7 @@ def nltk_sentiments(text):
         
 
 
-# In[146]:
+# In[56]:
 
 
 #run it
@@ -851,10 +862,11 @@ print(end-start)
 
 # ### Repeat for Sent DF
 
-# In[147]:
+# In[57]:
 
 
 #run it
+print('Calculating sentiments...')
 start = time.time()
 temp = [(key, nltk_sentiments(sent_dict[key])) for key in class_sent_df.index]
 
@@ -874,7 +886,7 @@ class_sent_df['nltk_pos_mean'], class_sent_df['nltk_pos_var'] =          pd.Seri
 
 class_sent_df['nltk_compound_mean'], class_sent_df['nltk_compound_var'] =          pd.Series([i[0].get('compound') for i in sentiments_by_sentence], index=keys),             pd.Series([i[1].get('compound') for i in sentiments_by_sentence], index=keys)
 
-print(end-start)
+print('it took',end-start, 'seconds')
 
 
 # ## Patterns Measures
@@ -897,27 +909,27 @@ print(end-start)
 #  For Wikipedia sentences, 2000 "certain" and 2000 "uncertain":
 #  modality(sentence) > 0.5 => A 0.70 P 0.73 R 0.64 F1 0.68
 
-# In[148]:
+# In[58]:
 
 
 from pattern.en import sentiment
 
 
-# In[149]:
+# In[59]:
 
 
 #debug
 sentiment([i for i in posts_dict.values()][0]['body'])
 
 
-# In[150]:
+# In[60]:
 
 
 #illustrate how we can check individual word values with pattern.
 sentiment([i for i in posts_dict.values()][0]['body']).assessments
 
 
-# In[151]:
+# In[61]:
 
 
 #calculate sentiments using pattern
@@ -928,14 +940,14 @@ del sent_and_subj
 class_df['sentiment'], class_df['subjectivity'] =  pd.Series(sent, index=keys), pd.Series(subj, index=keys)
 
 
-# In[152]:
+# In[62]:
 
 
 from pattern.en import parse, Sentence
 from pattern.en import modality, mood
 
 
-# In[153]:
+# In[63]:
 
 
 #The current version (3.6) of pattern has been unmaintained and the fix for this has not been implemented.
@@ -960,7 +972,7 @@ while i == 0: #WORKAROUND
         pass
 
 
-# In[154]:
+# In[64]:
 
 
 def split_sentences(text):
@@ -991,7 +1003,7 @@ def parse_and_get_m(text, get_mood=False, get_modal=True):
         
 
 
-# In[155]:
+# In[65]:
 
 
 #run it
@@ -1002,7 +1014,7 @@ except:
     temp = [(key, parse_and_get_m(posts_dict[key]['body'])) for key in class_df.index]
 keys, modalities_by_sentence = zip(*temp)
 end = time.time()
-get_ipython().run_line_magic('notify', '')
+#get_ipython().run_line_magic('notify', '')
 
 #prepare datatypes and add to dataframe
 mean, var = zip(*[(np.mean(x), np.var(x)) for x in modalities_by_sentence])
@@ -1013,7 +1025,7 @@ class_df['modality_sentence_mean'], class_df['modality_sentence_var'] =  pd.Seri
 
 # ### Repeat for Sentence DF
 
-# In[156]:
+# In[66]:
 
 
 #run it
@@ -1024,7 +1036,7 @@ except:
     temp = [(key, parse_and_get_m(sent_dict[key])) for key in class_sent_df.index]
 keys, modalities_by_sentence = zip(*temp)
 end = time.time()
-get_ipython().run_line_magic('notify', '')
+#get_ipython().run_line_magic('notify', '')
 
 #prepare datatypes and add to dataframe
 mean, var = zip(*[(np.mean(x), np.var(x)) for x in modalities_by_sentence])
@@ -1037,7 +1049,7 @@ class_sent_df['modality_sentence_mean'], class_sent_df['modality_sentence_var'] 
 
 # ##### Prep Functions and Stuff
 
-# In[157]:
+# In[67]:
 
 
 #code to generate colors for denisty of points of scatter plot.
@@ -1081,95 +1093,26 @@ def heat_scatter(df, first_col:str, second_col:str, point_size=2):
 
 # ### Relationship Between Var & Mean
 
-# In[158]:
-
-
-sns.set(rc={'figure.figsize':(5,4)})
-heat_scatter(class_df,'nltk_compound_mean','nltk_compound_var', point_size=1)
-plt.show()
-heat_scatter(class_df.loc[class_df['hazard_type'] != 'NA'],'nltk_compound_mean','nltk_compound_var', point_size=1)
-plt.show()
-heat_scatter(class_df.loc[class_df['hazard_type'] == 'NA'],'nltk_compound_mean','nltk_compound_var', point_size=1)
-
-
 # Within the NA set there is a high density of points at [0,0], as well as a positive correlation between mean and variance up to around 0.2 variance and 0.5 mean. This is not apparent in the NA set.
-
-# In[159]:
-
-
-sns.set(rc={'figure.figsize':(5,4)})
-heat_scatter(class_df,'modality_sentence_mean','modality_sentence_var', point_size=1)
-
 
 # #### Specifically for Bisphenol A
 
-# In[160]:
+# In[68]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
-plt.scatter(x = 'nltk_compound_var', y = 'nltk_compound_mean', data = class_df.loc[class_df['hazard_type'] == 'bisphenol a'],  alpha=0.5)
+plt.figure(figsize=(5, 4))
+fig = plt.scatter(x = 'nltk_compound_var', y = 'nltk_compound_mean', data = class_df.loc[class_df['hazard_type'] == 'bisphenol a'],  alpha=0.5)
 plt.xlabel('nltk_compound_var')
 plt.ylabel('nltk_compound_mean')
+plt.show()
+os.makedirs(Path(file_location + 'bpa'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'bpa/plot.png'), bbox_inches="tight")
 
 
 # Seems to be a negative relationship with mean and variance for Bisphenol A: as mean decreases, variance increases: some sentences are still very positive or very negative when mean sentiment is low for the entire post.
 
-# ### Misc
-
-# In[161]:
-
-
-sns.set(rc={'figure.figsize':(5,4)})
-heat_scatter(class_df, 'modality_sentence_var','modality_sentence_mean')
-
-
-# ### Most Relevant Metrics
-# pattern_sentiment, pattern_subjectivity, nltk_sentiment
-
-# In[162]:
-
-
-heat_scatter(class_df, 'sentiment','nltk_compound_mean', point_size=1)
-
-
-# In[163]:
-
-
-sns.regplot(y= 'sentiment', x ='nltk_compound_mean', data=class_df)
-
-
-# In[164]:
-
-
-heat_scatter(class_df, 'sentiment','subjectivity', point_size=1)
-
-
-# In[165]:
-
-
-heat_scatter(class_df,'nltk_compound_mean','subjectivity', point_size=1)
-
-
-# ### Other stuff
-
-# In[166]:
-
-
-heat_scatter(class_df,'nltk_compound_mean','modality_sentence_mean', point_size=1)
-
-
-# In[167]:
-
-
-heat_scatter(class_df,'nltk_pos_mean','modality_sentence_mean', point_size=1)
-plt.show()
-heat_scatter(class_df,'nltk_neu_mean','modality_sentence_mean', point_size=1)
-plt.show()
-heat_scatter(class_df,'nltk_neg_mean','modality_sentence_mean', point_size=1)
-plt.show()
-
-
-# In[168]:
+# In[69]:
 
 
 pattern_all = ['sentiment','subjectivity','modality_sentence_mean','modality_sentence_var']
@@ -1177,11 +1120,13 @@ nltk_means = ['nltk_neg_mean','nltk_neu_mean', 'nltk_pos_mean', 'nltk_compound_m
 nltk_vars = ['nltk_neg_var','nltk_neu_var','nltk_pos_var','nltk_compound_var']
 
 
-# In[169]:
-
-
+plt.clf()
+plt.figure(figsize=(4, 3))
 sns.set(rc={'figure.figsize':(4,3)})
-sns.heatmap(class_df[pattern_all + nltk_means + nltk_vars].corr(),             cmap= "vlag", center=0.00, xticklabels=True, yticklabels=True)
+fig = sns.heatmap(class_df[pattern_all + nltk_means + nltk_vars].corr(), cmap= "vlag", center=0.00, xticklabels=True, yticklabels=True)
+plt.show()
+os.makedirs(Path(file_location + 'heatmaps'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'heatmaps/sentiments.png'), bbox_inches="tight")
 
 
 # Negative correlations between nltk pos, neu, neg is expected since sum(...) = 1
@@ -1192,40 +1137,13 @@ sns.heatmap(class_df[pattern_all + nltk_means + nltk_vars].corr(),             c
 # 
 # Subjectivity and Modality are not highly correlated with either, overall. But subjectivity has small (~0.25) negative correlation with neutrality. This is quite intuitive as posts with less strongly indicative words will have more neutral sentiment as well as register a more objective
 
-# In[170]:
-
-
-sns.set(rc={'figure.figsize':(5,4)})
-errs = []
-for category in list(class_df['product_type'].value_counts().index): #get the non-zero labels (zero labels may create an error)
-    try:
-        num_of_posts = class_df.loc[class_df.product_type == category]
-        size_for_cat = 20./np.log(len(num_of_posts)) #make points bigger when theres less data to show.
-        heat_scatter(num_of_posts, 'sentiment','subjectivity', point_size=size_for_cat)
-        plt.title(category + ': %s points' % len(num_of_posts))
-        plt.show()
-    except ValueError:
-        print(category + ': insufficient data')
-    except Exception as exc:
-        errs.append(category + ' ' + str(exc))
-        errs.append(str(traceback.format_exc()))
-print('\n'.join(errs))
-
-
-# In[171]:
+# In[71]:
 
 
 class_df.loc[np.abs(class_df['sentiment']) < 0.05].loc[class_df['subjectivity'] < 0.05]
 
 
-# In[172]:
-
-
-#display the outlier set, zoomed in!
-heat_scatter(class_df.loc[np.abs(class_df['sentiment']) < 0.05].loc[class_df['subjectivity'] < 0.05], 'sentiment', 'subjectivity')
-
-
-# In[173]:
+# In[72]:
 
 
 num_lower_sentiment = len(class_df.loc[class_df['sentiment'] < 0.1])
@@ -1237,13 +1155,13 @@ num_higher_subj = len(class_df.loc[class_df['subjectivity'] >= 0.05])
 print((num_lower_subj, num_higher_subj))
 
 
-# In[174]:
+# In[73]:
 
 
 #TODO: save two lists of keys num_lower_subj, num_higher_subj
 
 
-# In[175]:
+# In[74]:
 
 
 sns.set(rc={'figure.figsize':(5,4)})
@@ -1251,7 +1169,7 @@ errs = []
 for category in list(class_df['product_type'].value_counts().index): #get the non-zero labels (zero labels may create an error)
     try:
         num_of_posts = class_df.loc[class_df.product_type == category]
-        size_for_cat = 20./np.log(len(num_of_posts)) #make points bigger when theres less data to show.
+        size_for_cat = 20./(np.log(len(num_of_posts))+0.00001) #make points bigger when theres less data to show.
         heat_scatter(num_of_posts, 'modality_sentence_mean','subjectivity', point_size=size_for_cat)
         plt.title(category + ': %s points' % len(num_of_posts))
         plt.show()
@@ -1263,14 +1181,14 @@ for category in list(class_df['product_type'].value_counts().index): #get the no
 print('\n'.join(errs))
 
 
-# In[176]:
+# In[75]:
 
 
 errs = []
 for haz in hazards.keys():
     posts_for_hazard = class_df.loc[(class_df[haz] > 0)]
     try:
-        size_for_cat = 20./np.log(len(posts_for_hazard)) #make points bigger when theres less data to show.
+        size_for_cat = 20./(np.log(len(posts_for_hazard))+0.00001) #make points bigger when theres less data to show.
         heat_scatter(posts_for_hazard, 'sentiment','subjectivity', point_size=size_for_cat)
         plt.title(haz + ': %s points' % len(posts_for_hazard))
         plt.show()
@@ -1284,7 +1202,7 @@ print('\n'.join(errs))
 
 # # Sentiment (Pos/Neg) by Product
 
-# In[178]:
+# In[76]:
 
 
 f, axes = plt.subplots(1, 3, figsize=(14,8))
@@ -1338,19 +1256,19 @@ plt.show()
 # 
 # alternate version of c: we instead take max of sY/sX or sX/sY, and then check that its <= F_
 
-# In[179]:
+# In[77]:
 
 
 import scipy
 
 
-# In[180]:
+# In[78]:
 
 
 hazard_classes = list(class_df['hazard_type'].value_counts().index.drop('NA'))
 
 
-# In[181]:
+# In[79]:
 
 
 baseline_v = np.var(class_df.loc[class_df['hazard_type'] == "NA"]['sentiment'])
@@ -1359,7 +1277,7 @@ m = len(class_df.loc[class_df['hazard_type'] == "NA"]['sentiment'])
 n = {item:len(class_df.loc[class_df['hazard_type'] == item]['sentiment'])           for item in hazard_classes}
 
 
-# In[182]:
+# In[80]:
 
 
 #Definition of Two-Tail F Test: (H0: variance is equal to baseline)
@@ -1386,7 +1304,7 @@ F_Test = {key:scipy.stats.f.cdf(F, m - 1, n[key]-1) for key, F in F_Test.items()
 F_Test = {key:{'Reject H0':p>1-(alpha/2),'p':p } for key, p in F_Test.items()}
 
 
-# In[183]:
+# In[81]:
 
 
 #show results
@@ -1415,7 +1333,7 @@ pd.DataFrame(F_Test).transpose()
 
 # #### Data Prep
 
-# In[184]:
+# In[82]:
 
 
 #we are trying to get the threads for which we can run a paired t-test
@@ -1430,13 +1348,13 @@ print(len(threads_without_NA - threads_with_NA), len(threads_with_NA - threads_w
 # 
 # note that in total there are 510 unique threads. and now we will drop 61 of them.
 
-# In[185]:
+# In[83]:
 
 
 paired_df = class_df.loc[threads_without_NA.intersection(threads_with_NA)].copy() #the df without unneeded threads.
 
 
-# In[186]:
+# In[84]:
 
 
 #get means grouped by thread & classification
@@ -1444,7 +1362,25 @@ paired_df = paired_df.reset_index().groupby(by = ['hazard_type', 'level_0']).mea
 paired_df = paired_df.reset_index().set_index('level_0')
 
 
-# In[187]:
+# In[85]:
+
+
+#PRODUCT VERSION UGH
+
+#we are trying to get the threads for which we can run a paired t-test
+#we can't use index.levels[0] because that just returns the indexes form the original, not the view.
+prod_threads_with_NA = set(list(zip(*list(class_df.loc[class_df['product_type'] == 'NA'].index)))[0])
+prod_threads_without_NA = set(list(zip(*list(class_df.loc[class_df['product_type'] != 'NA'].index)))[0])
+print(len(prod_threads_without_NA - prod_threads_with_NA), len(prod_threads_with_NA - prod_threads_without_NA))
+
+prod_paired_df = class_df.loc[prod_threads_without_NA.intersection(prod_threads_with_NA)].copy() #the df without unneeded threads.
+
+#get means grouped by thread & classification
+prod_paired_df = prod_paired_df.reset_index().groupby(by = ['product_type', 'level_0']).mean().dropna()
+prod_paired_df = prod_paired_df.reset_index().set_index('level_0')
+
+
+# In[86]:
 
 
 #create a dict of paired values for plotting. 
@@ -1462,16 +1398,28 @@ for label in paired_df['hazard_type'].value_counts().index.drop('NA'): # for lab
     # this is used in the next line because this index is NOT unique.
     # MULTIPLE ROWS HAVE THE SAME INDEX VALUE (thread url)
     paired_values[label] = (paired_df.loc[paired_df['hazard_type'] == label],                            paired_df.loc[paired_df['hazard_type'] == 'NA'].loc[relevant_index])
-    #create ???
+   
+
+prod_paired_values = {} #it works fine despite being red. its just a glitch in jupyter.
+
+for label in prod_paired_df['product_type'].value_counts().index.drop('NA'):
+    relevant_index = prod_paired_df.loc[prod_paired_df['product_type'] == label].index
+    prod_paired_values[label] = (prod_paired_df.loc[prod_paired_df['product_type'] == label],                            prod_paired_df.loc[prod_paired_df['product_type'] == 'NA'].loc[relevant_index])
 
 
-# In[188]:
+# In[87]:
+
+
+{key:len(i[0]) for key, i in prod_paired_values.items()}
+
+
+# In[88]:
 
 
 {key:len(i[0]) for key, i in paired_values.items()}
 
 
-# In[658]:
+# In[148]:
 
 
 ##define a function which is useful for making nice box plots
@@ -1485,12 +1433,59 @@ def boxstrip(x_name:str, y_name:str, df=class_df):
     #sns.boxenplot(x='subjectivity', y='hazard_type', data=class_df, k_depth='full', showfliers=False)
     sns.stripplot(x=x_name, y=y_name, data=df, color='black', alpha=0.8, jitter=0.07, size=3)
     #vertical line at 50% quantile of NA, as a baseline
-    plt.axvline(np.nanquantile(class_df.loc[df[y_name] == 'NA'][x_name],0.5), 0, c='red', linewidth=1)
+    return plt.axvline(np.nanquantile(class_df.loc[df[y_name] == 'NA'][x_name],0.5), 0, c='red', linewidth=1)
+
+
+# ## PRODUCT BOX PLOTS
+
+# In[149]:
+
+
+#generate all boxplots
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+os.makedirs(Path(file_location + 'product_box_plots'), exist_ok=True)
+
+fig = boxstrip('sentiment', 'product_type')
+plt.show()
+fig.figure.savefig(Path(file_location + 'product_box_plots/pat_prod_box.png'), bbox_inches="tight")
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+fig = boxstrip('nltk_compound_mean', 'product_type')
+plt.show()
+nltk_prod_box = fig.figure.savefig(Path(file_location + 'product_box_plots/pat_prod_box.png'), bbox_inches="tight")
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+fig = boxstrip('nltk_compound_var', 'product_type')
+plt.show()
+fig.figure.savefig(Path(file_location + 'product_box_plots/nltk_var_prod_box.png'), bbox_inches="tight")
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+fig = boxstrip('subjectivity', 'product_type')
+plt.show()
+fig.figure.savefig(Path(file_location + 'product_box_plots/subj_prod_box.png'), bbox_inches="tight")
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+fig = boxstrip('modality_sentence_mean','product_type')
+plt.show()
+fig.figure.savefig(Path(file_location + 'product_box_plots/mod_prod_box.png'), bbox_inches="tight")
+plt.clf()
+sns.set(rc={'figure.figsize':(4,12)})
+fig = boxstrip('modality_sentence_var','product_type')
+plt.show()
+fig.figure.savefig(Path(file_location + 'product_box_plots/mod_var_prod_box.png'), bbox_inches="tight")
+plt.clf()
+#os.makedirs(Path(file_location + 'heatmaps'), exist_ok=True)
+#fig.figure.savefig(Path(file_location + 'heatmaps/test.png'))
 
 
 # ## Sentiment (Pos/Neg) by Hazard
 
-# In[659]:
+# It may seem strange that these terms have positive sentiment. Keep in mind that we are looking at the sentiment in the entire post where the term occurs, and people are netmums are quite often very friendly to each other when replying.
+# 
+# #TODO: use only subset of terms around the phrases! (non-per  post approach probablY)
+
+# In[150]:
 
 
 #sns.set(rc={'figure.figsize':(4,12)})
@@ -1498,29 +1493,37 @@ def boxstrip(x_name:str, y_name:str, df=class_df):
 #plt.show()
 #sns.boxenplot(x='nltk_compound_mean', y='hazard_type', data=class_df)
 #plt.show()
-
+plt.clf()
 sns.set(rc={'figure.figsize':(4,12)})
-boxstrip('sentiment', 'hazard_type')
+plt.figure(figsize=(4, 12))
+fig = boxstrip('sentiment', 'hazard_type')
 plt.show()
 
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/pat_haz_box.png'), bbox_inches="tight")
+
+plt.clf()
 sns.set(rc={'figure.figsize':(4,12)})
-boxstrip('nltk_compound_mean', 'hazard_type')
+fig = boxstrip('nltk_compound_mean', 'hazard_type')
 plt.show()
 
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/nltk_haz_box.png'), bbox_inches="tight")
+#
+plt.clf()
 sns.set(rc={'figure.figsize':(4,12)})
-boxstrip('nltk_compound_var', 'hazard_type')
+fig =boxstrip('nltk_compound_var', 'hazard_type')
 plt.show()
 
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/nltk_var_haz_box.png'), bbox_inches="tight")
 
-# It may seem strange that these terms have positive sentiment. Keep in mind that we are looking at the sentiment in the entire post where the term occurs, and people are netmums are quite often very friendly to each other when replying.
-# 
-# #TODO: use only subset of terms around the phrases! (non-per  post approach probablY)
 
 # ### Pattern Sent: T-Test & F-Test by Hazard
 
 # #### Check if normally distributed (visual check)
 
-# In[190]:
+# In[151]:
 
 
 #check that the data are normally distributed
@@ -1535,7 +1538,7 @@ for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
 
 # For larger sample sizes our data looks roughly normally distributed. It is then reasonable to assume with this prior knowledge that the other terms should also follow a normal distribution.
 
-# In[191]:
+# In[152]:
 
 
 #Paired and Independent T-Test.
@@ -1580,21 +1583,25 @@ def display_t_test(highlight = True):
         return display_df
 
 
-# In[192]:
+# In[203]:
 
 
 T_Test = get_paired_t_tests(paired_values, 'sentiment')
-display_t_test()
+
+os.makedirs(Path(file_location + 'ttest'), exist_ok=True)
+with open(Path(file_location + 'ttest/pattern.html'), 'w') as f:
+        f.write(display_t_test(T_Test).render())
 
 
 # ### NLTK Sent: T-Test & F-Test by Hazard
 
 # #### Check if normally distributed (visual check)
 
-# In[193]:
+# In[154]:
 
 
 #check that the data are normally distributed
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
 for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
     plt.hist(paired_values[label][0]['nltk_compound_mean'], bins=30)
@@ -1606,7 +1613,7 @@ for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
 
 # #### F Test
 
-# In[194]:
+# In[155]:
 
 
 F_Test = {item:np.var(class_df.loc[class_df['hazard_type'] == item]['nltk_compound_mean'])           for item in hazard_classes}
@@ -1626,10 +1633,9 @@ alpha = 0.05
 #Test against the F distirbution at the given level
 F_Test = {key:scipy.stats.f.cdf(F, m - 1, n[key]-1) for key, F in F_Test.items()}
 F_Test = {key:{'Reject H0':p>1-(alpha/2),'p':p } for key, p in F_Test.items()}
-#TODO: check that this is correct...
 
 
-# In[195]:
+# In[156]:
 
 
 #show results
@@ -1638,20 +1644,28 @@ pd.DataFrame(F_Test).transpose()
 
 # #### Paired T-Test
 
-# In[196]:
+# In[157]:
 
 
 T_Test = get_paired_t_tests(paired_values, 'nltk_compound_mean')
-display_t_test()
+
+os.makedirs(Path(file_location + 'ttest'), exist_ok=True)
+with open(Path(file_location + 'ttest/nltk.html'), 'w') as f:
+        f.write(display_t_test(T_Test).render())
 
 
 # ## Subjectivity
 
-# In[198]:
+# In[158]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(4,12)})
-boxstrip('subjectivity', 'hazard_type')
+plt.figure(figsize=(4, 12))
+fig = boxstrip('subjectivity', 'hazard_type')
+plt.show()
+
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/subj_haz_box.png'), bbox_inches="tight")
 
 
 # TODO: write comments about this
@@ -1660,10 +1674,11 @@ boxstrip('subjectivity', 'hazard_type')
 
 # #### Check if normally distributed (visual check)
 
-# In[199]:
+# In[159]:
 
 
 #check that the data are normally distributed
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
 for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
     plt.hist(paired_values[label][0]['subjectivity'], bins=30)
@@ -1675,7 +1690,7 @@ for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
 
 # #### F Test
 
-# In[200]:
+# In[160]:
 
 
 F_Test = {item:np.var(class_df.loc[class_df['hazard_type'] == item]['subjectivity'])           for item in hazard_classes}
@@ -1696,7 +1711,7 @@ F_Test = {key:scipy.stats.f.cdf(F, m - 1, n[key]-1) for key, F in F_Test.items()
 F_Test = {key:{'Reject H0':p>1-(alpha/2),'p':p } for key, p in F_Test.items()}
 
 
-# In[201]:
+# In[161]:
 
 
 #show results
@@ -1705,23 +1720,39 @@ pd.DataFrame(F_Test).transpose()
 
 # #### Paired T-Test
 
-# In[202]:
+# In[162]:
+
+
+display_t_test(T_Test).render()
+
+
+# In[163]:
 
 
 T_Test = get_paired_t_tests(paired_values, 'subjectivity')
-display_t_test()
+
+os.makedirs(Path(file_location + 'ttest'), exist_ok=True)
+with open(Path(file_location + 'ttest/subj.html'), 'w') as f:
+        f.write(display_t_test(T_Test).render())
 
 
 # ## Modality
 
-# In[203]:
+# In[164]:
 
-
+plt.clf()
 sns.set(rc={'figure.figsize':(4,12)})
 boxstrip('modality_sentence_mean','hazard_type')
 plt.show()
+
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/mod_haz_box.png'), bbox_inches="tight")
+plt.clf()
 boxstrip('modality_sentence_var','hazard_type')
 plt.show()
+
+os.makedirs(Path(file_location + 'hazard_box_plots'), exist_ok=True)
+fig.figure.savefig(Path(file_location + 'hazard_box_plots/mod_var_haz_box.png'), bbox_inches="tight")
 
 
 # We can see that compared to posts without hazard terms (NA), posts with hazards mentioned tend to have lower confidence in what they are saying.
@@ -1733,10 +1764,11 @@ plt.show()
 
 # #### Check if normally distributed (visual check)
 
-# In[204]:
+# In[165]:
 
 
 #check that the data are normally distributed
+plt.clf()
 sns.set(rc={'figure.figsize':(5,4)})
 for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
     plt.hist(paired_values[label][0]['modality_sentence_mean'], bins=30)
@@ -1748,7 +1780,7 @@ for label in paired_df['hazard_type'].value_counts().index.drop('NA'):
 
 # #### F Test
 
-# In[205]:
+# In[166]:
 
 
 F_Test = {item:np.var(class_df.loc[class_df['hazard_type'] == item]['modality_sentence_mean'])           for item in hazard_classes}
@@ -1769,7 +1801,7 @@ F_Test = {key:scipy.stats.f.cdf(F, m - 1, n[key]-1) for key, F in F_Test.items()
 F_Test = {key:{'Reject H0':p>1-(alpha/2),'p':p } for key, p in F_Test.items()}
 
 
-# In[206]:
+# In[167]:
 
 
 #show results
@@ -1778,35 +1810,38 @@ pd.DataFrame(F_Test).transpose()
 
 # #### Paired T-Test
 
-# In[207]:
+# In[168]:
 
 
 T_Test = get_paired_t_tests(paired_values, 'modality_sentence_mean')
-display_t_test()
+
+os.makedirs(Path(file_location + 'ttest'), exist_ok=True)
+with open(Path(file_location + 'ttest/modality.html'), 'w') as f:
+        f.write(display_t_test(T_Test).render())
 
 
 # ## Number of Occurences of Hazard Term by Category
 # 
 # Here, we examine the number of occurences in a post, with the goal of performing regressions between our metrics and the number of occurences in a post. Of course, if the number of occurences does not vary much then the regressions will be pointless
 
-# In[208]:
+# In[169]:
 
 
 #assign the max to it's own col to graph easily
 class_df['count_for_classified_hazard'] =class_df[hazards.keys()].max(axis=1)
 
 
-# In[209]:
+# In[170]:
 
 
-sns.set(rc={'figure.figsize':(4,8)})
-sns.boxenplot(x='count_for_classified_hazard', y='hazard_type', data=class_df, k_depth='trustworthy', showfliers=False)
-sns.stripplot(x='count_for_classified_hazard', y='hazard_type', data=class_df, color='black', alpha=0.5, jitter=0.4, size=3)
+#sns.set(rc={'figure.figsize':(4,8)})
+#sns.boxenplot(x='count_for_classified_hazard', y='hazard_type', data=class_df, k_depth='trustworthy', showfliers=False)
+#sns.stripplot(x='count_for_classified_hazard', y='hazard_type', data=class_df, color='black', alpha=0.5, jitter=0.4, size=3)
 
 
 # # Regressions
 
-# In[593]:
+# In[171]:
 
 
 def display_reg_coeffs(params, pvals, highlight = True, drop_insignificant = True, keep = None):
@@ -1884,7 +1919,7 @@ def display_reg_coeffs_nicely(the_table, highlight = True, drop_insignificant = 
         return display_df
 
 
-# In[211]:
+# In[172]:
 
 
 import statsmodels.api as sm
@@ -1892,14 +1927,14 @@ import statsmodels.formula.api as smf
 #https://www.statsmodels.org/devel/index.html
 
 
-# In[212]:
+# In[173]:
 
 
 from sklearn import linear_model
 reg = linear_model.LinearRegression()
 
 
-# In[213]:
+# In[174]:
 
 
 X = np.array(class_df.loc[class_df['hazard_type'] != 'NA']['count_for_classified_hazard'])
@@ -1914,265 +1949,9 @@ y = class_df.loc[class_df['hazard_type'] != 'NA']['sentiment']
 
 # We get higher coefficient and lower intercept but obviosuly this is because the NA data has a 7000 subset of points with sentiment at zero.
 
-# ## Interaction Modeled Regression: 
-#     * using hazard as category
-#     * using product as category
-#     
-# Regression Specification (todo):
-# 
-# 
-# $Y = \beta_0 + \bf{\beta} \mathbb{1}_{posthazrd category}\bf{X}$
-# 
-# So $\mathbb{1}$ is a factor variable splitting the counts of *all* hazards based on the hazard categroy determined
-# 
-# for this specification we do not need to drop NA because they are already separated and ran only by the factor vairable NA
-
-# In[245]:
-
-
-#FIXME: I should delete this cell, this is a stupid specification...
-
-X = class_df[list(hazards.keys()) + ['hazard_type', 'sentiment']]
-X.columns = make_underscores(list(X.columns)) #for easy use with smf.
-X.columns = [re.sub(',','',i) for i in X.columns] #for easy use with smf.
-
-#https://www.statsmodels.org/stable/example_formulas.html#categorical-variables
-
-regressors = list(X.columns.drop(['hazard_type', 'sentiment'])) #this works because list.drop is not in place!
-fmla = 'sentiment ~ (%s) : hazard_type' % ' + '.join(regressors)
-
-results = smf.ols(formula=fmla, data=X, missing='drop').fit()
-print(fmla)
-print(results.summary())
-
-
-# In[246]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-#I'm getting these 0 p-values beause the coefficient is zero.. the h0 and the h1 are teh fucking same.
-
-
-# In[247]:
-
-
-#the SAME THING but by products!
-X = class_df[list(hazards.keys()) + ['product_type', 'sentiment']]
-X.columns = make_underscores(list(X.columns)) #for easy use with smf.
-X.columns = [re.sub(',','',i) for i in X.columns] #for easy use with smf.
-
-#https://www.statsmodels.org/stable/example_formulas.html#categorical-variables
-
-regressors = list(X.columns.drop(['product_type', 'sentiment'])) #this works because list.drop is not in place!
-fmla = 'sentiment ~ (%s) : product_type' % ' + '.join(regressors)
-
-results = smf.ols(formula=fmla, data=X, missing='drop').fit()
-print(fmla)
-print(results.summary())
-
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_interaction.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
-    
-    
-
-
-# In[248]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-
-
-# ## Simpler Models
-# * fewer coefficients & easier to interpret
-# * higher conf levels
-
-# ### Pattern Sentiment
-
-# In[249]:
-
-
-#all hazard vars at once.
-X = class_df.loc[class_df['hazard_type'] != 'NA'][hazards.keys()]
-y = class_df.loc[class_df['hazard_type'] != 'NA']['sentiment']
-X=sm.add_constant(X)
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_pattern_simple.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
-
-
-# In[250]:
-
-
-# TODO: ! There are multicollinearity problems possibly. How to fix? Why?
-
-
-# In[251]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-
-
-# ### NLTK Sentiment
-
-# In[252]:
-
-
-#all hazard vars at once.
-X = class_df.loc[class_df['hazard_type'] != 'NA'][hazards.keys()]
-y = class_df.loc[class_df['hazard_type'] != 'NA']['nltk_compound_mean']
-X=sm.add_constant(X)
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_nltk_simple.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
-
-
-# We remove NA because these posts do not contain any mentions of hazards. They add unnecessary noise because their sentiments may vary due to other non-observed factors.
-# 
-# Significance at 5% level: 
-# 
-# * Positive: Bisphenol A, Pthalates
-# * Negative : Listeria, Cronobacter, Virus, Related Terms
-
-# In[253]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-
-
-# ### Subjectivity
-
-# In[254]:
-
-
-X = class_df.loc[class_df['hazard_type'] != 'NA'][hazards.keys()]
-y = class_df.loc[class_df['hazard_type'] != 'NA']['subjectivity']
-X=sm.add_constant(X)
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_subj_simple.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
-
-
-# In[255]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-
-
-# 
-# Significance at 5% level: 
-# 
-# * Positive: Bisphenol A
-# * Negative : chemical contaminants, campylobacter, related terms
-
-# ### Modality (how sure the person sounds)
-
-# In[256]:
-
-
-X = class_df.loc[class_df['hazard_type'] != 'NA'][hazards.keys()]
-y = class_df.loc[class_df['hazard_type'] != 'NA']['modality_sentence_mean']
-X=sm.add_constant(X)
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_modality_simple.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
-
-
-# In[257]:
-
-
-display_reg_coeffs(results.params, results.pvalues)
-
-
-# 
-# Significance at 5% level: 
-# 
-# * Positive: mycotoxin, bisphenol a, mosh and moah, acrylamid, microbiologic contaminants
-# * Negative : chemical contaminants, cronobacter
-
-# ## Simple Model with "Controls" : CountVec Words
-# * same spec as simple model but also has the count terms from countvecotrizer without tf-idf
-# 
-# * WHY??
-#  * The only good reason to add these terms to our regression is to function as a CONTROL.
-#  	* The terms should not be terms which on their own are strong sentiment indicators.
-#  * Other than this, it is better to use the terms in the context of checking for CORRELATION.
-#  	* If they are heavily correlated and not strong sentiment-indicating words, we should/can add to the regression as controls.
-# 
-
-# In[258]:
-
-
-#remove duplicate column names
-other_words = list(set(maxcountdf.columns) - set(class_df.columns))
-#create concat df
-temp_df = pd.concat([class_df,maxcountdf[other_words]], axis=1)
-cols = list(hazards.keys()) + other_words
-
-
-# In[259]:
-
-
-#all hazard vars at once.
-X = temp_df.loc[temp_df['hazard_type'] != 'NA'][cols]
-X=sm.add_constant(X)
-
-
-# ### Pattern Sentiment 
-
-# In[260]:
-
-
-y = temp_df.loc[temp_df['hazard_type'] != 'NA']['sentiment']
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-
-# ### NLTK Sentiment
-
-# In[261]:
-
-
-y = class_df.loc[class_df['hazard_type'] != 'NA']['nltk_compound_mean']
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-
-# ### Subjectivity
-
-# In[262]:
-
-
-y = class_df.loc[class_df['hazard_type'] != 'NA']['subjectivity']
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-
-# ### Modality (how sure the person sounds)
-
-# In[263]:
-
-
-y = class_df.loc[class_df['hazard_type'] != 'NA']['modality_sentence_mean']
-results = sm.OLS(y,X).fit()
-print(results.summary())
-
-
 # ## Simple Model with "Controls" : CountVec NOUN Words
 
-# In[597]:
+# In[175]:
 
 
 #remove duplicate column names
@@ -2187,121 +1966,159 @@ X=sm.add_constant(X)
 
 # ### Pattern Sentiment 
 
-# In[598]:
+# In[202]:
 
 
 y = temp_df.loc[temp_df['hazard_type'] != 'NA']['sentiment']
 results = sm.OLS(y,X).fit()
 print(results.summary())
 
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_pattern_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+#with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_pattern_ctrl.tex','w') as fh:
 
 
-# In[647]:
+
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/pattern.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
+
+
+# In[ ]:
 
 
 #import imgkit
-#imgkit.from_string(display_reg_coeffs_nicely(results.summary().tables[1]).render(), 'temporary_debug_image.png')
+#imgkit.from_string(styler_table = display_reg_coeffs_nicely(results.summary().tables[1]).render(), 'temporary_debug_image.png')
 
 
-# In[599]:
+# In[ ]:
 
 
 #display_reg_coeffs(results.params, results.pvalues, keep='hazards')
-display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/pattern.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[600]:
+# In[179]:
 
 
 #display_reg_coeffs(results.params, results.pvalues, keep = other_words)
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/pattern_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ### NLTK Sentiment
 
-# In[601]:
+# In[180]:
 
 
 y = class_df.loc[class_df['hazard_type'] != 'NA']['nltk_compound_mean']
 results = sm.OLS(y,X).fit()
 print(results.summary())
 
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_nltk_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/nltk.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[602]:
+# In[181]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/nltk.html'), 'w') as f:
+        f.write(styler_table.render())
+        
 
 
-# In[603]:
+# In[182]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/nltk_controls.html'), 'w') as f:
+        f.write(styler_table.render())
+        
 
 
 # ### Subjectivity
 
-# In[604]:
+# In[183]:
 
 
 y = class_df.loc[class_df['hazard_type'] != 'NA']['subjectivity']
 results = sm.OLS(y,X).fit()
 print(results.summary())
 
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_subj_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/subj.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[605]:
+# In[184]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/subj.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[606]:
+# In[185]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/subj_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ### Modality (how sure the person sounds)
 
-# In[607]:
+# In[186]:
 
 
 y = class_df.loc[class_df['hazard_type'] != 'NA']['modality_sentence_mean']
 results = sm.OLS(y,X).fit()
 print(results.summary())
 
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_haz_modality_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/modality.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[608]:
+# In[187]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='hazards')
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/modality.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[609]:
+# In[188]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'haz_regression_html'), exist_ok=True)
+with open(Path(file_location + 'haz_regression_html/modality_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ## PRODUCT Simple Model, with Noun control
 # 
 
-# In[610]:
+# In[189]:
 
 
 #remove duplicate column names
@@ -2316,425 +2133,129 @@ X=sm.add_constant(X)
 
 # ### Pattern Sentiment 
 
-# In[611]:
+# In[190]:
 
 
 y = temp_df.loc[temp_df['product_type'] != 'NA']['sentiment']
 results = sm.OLS(y,X).fit()
-print(results.summary())
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_prod_pattern_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/prod_pattern.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[612]:
+# In[191]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/pattern.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[613]:
+# In[192]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/pattern_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ### NLTK Sentiment
 
-# In[614]:
+# In[193]:
 
 
 y = class_df.loc[class_df['product_type'] != 'NA']['nltk_compound_mean']
 results = sm.OLS(y,X).fit()
-print(results.summary())
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_prod_nltk_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/prod_nltk.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[615]:
+# In[194]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/nltk.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[616]:
+# In[195]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/nltk_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ### Subjectivity
 
-# In[617]:
+# In[196]:
 
 
 y = class_df.loc[class_df['product_type'] != 'NA']['subjectivity']
 results = sm.OLS(y,X).fit()
-print(results.summary())
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_prod_subj_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
+
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/prod_subj.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
 
-# In[618]:
+# In[197]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/subj.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-# In[619]:
+# In[198]:
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/subj_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
 # ### Modality (how sure the person sounds)
 
-# In[620]:
+# In[199]:
 
 
 y = class_df.loc[class_df['product_type'] != 'NA']['modality_sentence_mean']
 results = sm.OLS(y,X).fit()
-print(results.summary(), results.params[results.pvalues < 0.05])
-with open('/Users/sma/Documents/INRAE internship/REPORT/tables/reg_prod_modality_ctrl.tex','w') as fh:
-    fh.write( results.summary().tables[0].as_latex_tabular() )
-    fh.write( results.summary().tables[2].as_latex_tabular() )
 
+os.makedirs(Path(file_location + 'full_reg_tables'), exist_ok=True)
+with open(Path(file_location + 'full_reg_tables/prod_modality.tex'), 'w') as f:
+    f.write( results.summary().tables[0].as_latex_tabular() )
+    f.write( results.summary().tables[2].as_latex_tabular() )
 
-# In[621]:
 
+# In[200]:
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
 
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep='products')
 
-# In[622]:
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/modality.html'), 'w') as f:
+        f.write(styler_table.render())
 
 
-display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+# In[201]:
 
 
-# # TEMP implmementing a linear mixed effect model.
-# `
-
-# In[623]:
-
-
-#remove duplicate column names
-
-other_words = list(set(maxcountdf.columns) - set(class_df.columns))
-
-#create concat df
-
-temp_df = pd.concat([class_df,maxcountdf[other_words]], axis=1)
-#remove posts higher than 20 because i thought it would fix singular matrix issue
-#but matrx iss still singular... 
-temp_df = temp_df.loc[temp_df['hazard_type'] != "NA"]
-
-indexes = temp_df.index.to_frame()
-indexes.columns = ['url', 'postnum']
-#temp_df = pd.concat([temp_df, indexes], axis=1)
-#temp_df = temp_df.loc[temp_df['postnum'] < 3]
-#temp_df = temp_df.drop(['url','postnum'],axis=1)
-
-
-# In[624]:
-
-
-# ATTEMPT TO REMOVE SINGULARITY...
-empty_cols = (temp_df.sum(axis=0) == 0).loc[(temp_df.sum(axis=0) == 0) == True].index
-
-cols = list(hazards.keys())
-cols = [i for i in cols if i not in empty_cols] # ATTEMPT TO REMOVE SINGULARITY...
-
-#all hazard vars at once.
-X = temp_df[cols]
-
-#X = sm.add_constant(X)
-
-y = temp_df['nltk_compound_mean']
-
-
-# In[625]:
-
-
-X = X.reset_index().set_index(['level_0','level_1'])
-
-
-# In[626]:
-
-
-#chekc for collinearity
-u, s, vt = np.linalg.svd(X.groupby(['level_0']).mean(), 0)
-s
-
-
-# In[627]:
-
-
-blahh = temp_df.index.to_frame()
-
-
-# In[628]:
-
-
-blahh = blahh.reset_index(drop=True)
-
-
-# In[629]:
-
-
-blahh[0] = blahh[0].astype('category')
-blahh[1] = blahh[1].astype('category')
-
-
-# In[630]:
-
-
-blahh[0] = blahh[0].cat.codes
-blahh[1] = blahh[1].cat.codes
-
-
-# In[631]:
-
-
-X = X.reset_index(drop=True) #useless
-
-
-# In[632]:
-
-
-y = y.reset_index(drop=True) #useless
-
-
-# In[633]:
-
-
-blahh[0].value_counts()
-
-
-# In[634]:
-
-
-X.shape
-
-
-# In[635]:
-
-
-md = sm.MixedLM(y,X, groups=blahh[0]) 
-mdf = md.fit(method=["powell", "lbfgs"])
-print(mdf.summary())
-# by posts I only barely get it to run. It wuld be cool to do it by both but it seems difficult.
-
-#NOTE: if i use both levels (thread, and post number) then it will be collinear because each level only contains one observation.
-# I think that's why. lol. 
-# Regardless, we are ONLY gonna use the thread level MAYBE. and we need to create the post-level now which is fore sure to be uysed
-# and will defdinitely not be collinear lol !
-
-
-# # Location of Mention of Hazards within Threads
-
-# In[636]:
-
-
-# the average placement of post in thread.
-NA_group = class_df.loc[class_df['hazard_type'] == 'NA'].reset_index().groupby('level_0')
-hazard_grouped_df = class_df.loc[class_df['hazard_type'] != 'NA'].reset_index().groupby('level_0')
-
-sns.set(rc={'figure.figsize':(8,4)})
-plt.hist(NA_group['level_1'].mean(), log=True, bins=80)
-plt.show()
-plt.hist(hazard_grouped_df['level_1'].mean(), log=True, bins = 80)
-plt.show()
-
-#this is misleading, we need to group by thread and take averages again. I can use teh code I already did for the paired t-test! 
-
-
-# In[637]:
-
-
-class_df.reset_index().pivot(columns='hazard_type').level_1.plot(kind = 'hist', stacked=True, log=True, bins=100)
-
-
-# In[638]:
-
-
-pd.DataFrame({k: v for k, v in class_df.reset_index().groupby('hazard_type').level_1}).plot.hist(stacked=True, log=True, bins=100)
-
-
-# We can see from the above that we have three distinct levels of data: (0,500), (500,1500), (1500, inf)
-# 
-# We can plot these separately to get a better look.
-
-# In[639]:
-
-
-#entire thing
-sns.set(rc={'figure.figsize':(8,16)})
-class_df.loc[class_df['hazard_type'] != 'NA'].reset_index().pivot(columns='hazard_type').level_1.plot(kind = 'hist', stacked=True, bins=100)
-plt.show()
-
-#only early posts
-temp_df = class_df.loc[class_df['hazard_type'] != 'NA'].reset_index()
-temp_df = temp_df.loc[temp_df['level_1'] <= 50]
-sns.set(rc={'figure.figsize':(8,16)})
-temp_df.pivot(columns='hazard_type').level_1.plot(kind = 'hist', stacked=True, bins=50)
-plt.show()
-
-#further out, fewer of these
-sns.set(rc={'figure.figsize':(8,4)})
-class_df.loc[class_df['hazard_type'] != 'NA'].reset_index().pivot(columns='hazard_type').level_1.plot(kind = 'hist', stacked=True, bins=100, ylim=(0,20))
-plt.show()
-
-
-# In[640]:
-
-
-#all occurences, not averaged
-sns.set(rc={'figure.figsize':(8,4)})
-plt.hist(class_df.loc[class_df['hazard_type'] == 'NA'].reset_index()['level_1'], bins=70, log=True, histtype='barstacked')
-plt.hist(class_df.loc[class_df['hazard_type'] != 'NA'].reset_index()['level_1'], bins=70, log=True, histtype='barstacked')
-plt.show()
-
-#with xlimit
-sns.set(rc={'figure.figsize':(8,4)})
-temp_df = class_df.reset_index()
-temp_df = temp_df.loc[temp_df['level_1'] <= 99]
-plt.hist(temp_df.loc[temp_df['hazard_type'] == 'NA']['level_1'], bins=100, log=True)
-plt.hist(temp_df.loc[temp_df['hazard_type'] != 'NA']['level_1'], bins=100, log=True)
-plt.show()
-
-
-# In[641]:
-
-
-temp_group.loc[temp_group['hazard_type'] == NA]
-
-
-# In[ ]:
-
-
-class_df[product_cols].corr()
-
-
-# # Examine URLS and quotes from hazard posts
-
-# In[ ]:
-
-
-#TODO: get mre specific, which product is it classified as? what thread is it in, etc things.
-
-
-# In[ ]:
-
-
-hazard_post_keys = class_df.loc[class_df['hazard_type'] != 'NA'].index
-
-
-# In[ ]:
-
-
-len(hazard_post_keys)
-
-
-# In[ ]:
-
-
-all_links = []
-all_quotes = []
-for key in hazard_post_keys:
-    all_links.append(posts_dict[key]['body_urls'])
-for key in hazard_post_keys:
-    all_quotes.append(posts_dict[key]['quotes_w'])
-for key in hazard_post_keys:
-    all_quotes.append(posts_dict[key]['quotes_y'])
-
-
-# In[ ]:
-
-
-#flatten
-all_links = [link for item in all_links for link in item]
-all_quotes = [quote for item in all_quotes for quote in item]
-
-
-# In[ ]:
-
-
-y_quotes = [quote for quote in all_quotes if type(quote) is dict]
-
-
-# In[ ]:
-
-
-pd.Series([i['name'] for i in y_quotes]).value_counts()
-
-
-# In[ ]:
-
-
-#TODO: most common words or something
-
-
-# In[ ]:
-
-
-dict(pd.DataFrame(all_links).value_counts())
-
-
-# In[ ]:
-
-
-#look to see if hazard mentioning posts were quotes by NA posts.
-na_quotes =[]
-for key in hazard_post_keys:
-    na_quotes.append(posts_dict[key]['quotes_w'])
-for key in hazard_post_keys:
-    if posts_dict[key]['quotes_y']:
-        na_quotes.append({i['text'] for i in posts_dict[key]['quotes_y']) #TODO: alternate way {text, quotes} and analyze the relationship between words and replies to it
-#flatten
-na_quotes = [quote for item in na_quotes for quote in item]
-
-
-# In[ ]:
-
-
-na_quotes
-
-
-# In[ ]:
-
-
-quote_counts = term_counter.fit_transform(na_quotes)
-
-
-# In[ ]:
-
-
-quote_counts_arr = quote_counts.toarray() #run once
-quote_counts_list = []
-
-
-# In[ ]:
-
-
-for num, _ in enumerate(quote_counts_arr): #TODO just use netmums, not text_dict?? its confusing. (they have the same keys)
-    quote_counts_list.append({term: quote_counts_arr[num][value] for term, value in term_counter.vocabulary_.items()})
-
-
-# In[ ]:
-
-
-quotecountdf = pd.DataFrame.from_dict(quote_counts_list)
-quotecountdf
-#TODO:combine columns
-
-
-# In[ ]:
-
-
-sns.set(rc={'figure.figsize':(5,25)})
-plt.barh(quotecountdf.sum(axis=0).index, quotecountdf.sum(axis=0), log=True)
-plt.show()
+styler_table = display_reg_coeffs_nicely(results.summary().tables[1], keep=other_words)
+os.makedirs(Path(file_location + 'prod_regression_html'), exist_ok=True)
+with open(Path(file_location + 'prod_regression_html/modality_controls.html'), 'w') as f:
+        f.write(styler_table.render())
 

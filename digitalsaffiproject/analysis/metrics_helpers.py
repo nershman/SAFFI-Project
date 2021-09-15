@@ -2,7 +2,7 @@
 # @Author: sma
 # @Date:   2021-05-26 17:36:15
 # @Last Modified by:   sma
-# @Last Modified time: 2021-08-14 18:54:43
+# @Last Modified time: 2021-09-15 16:02:47
 """
 helper functions using skleaern to vectorize and count terms in our datatypes.
 
@@ -13,7 +13,8 @@ https://scikit-learn.org/stable/modules/feature_extraction.html#text-feature-ext
 #os.chdir('/Users/sma/Documents/INRAE internship/scrape-git/facebook') #DEBUG
 
 import sys
-sys.path.append('../') #make parent path visible so we can import modules from other folders.
+sys.path.append('../')
+sys.path.append('../scraping/') #make parent path visible so we can import modules from other folders.
 
 from search_engines import Google
 from search_engines import http_client as search_http_client
