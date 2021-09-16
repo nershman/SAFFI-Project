@@ -1,4 +1,3 @@
-#TODO: rename allposts2 to allposts or something, basically get rid of all the duplicate pkl files and then homogenize the names across the notebooks.
 ############################################
 ### INSTRUCTIONS FOR REPLICATION #########
 #########################################
