@@ -43,7 +43,7 @@ Run:
 
 Four files to run
 
-specific_fb_groups.py - scrapes groups and saves a .pkl
-specific_fb_pages.py - scrapes pages and saves a .pkl
-extract_links_from_html.py - extracts links from google search html pages (saved locally)
-fb_searchscrape_manuallinks.py - scrapes specific facebook links (extracted from above) and saves a .pkl
+* specific_fb_groups.py - scrapes groups and saves a .pkl
+* specific_fb_pages.py - scrapes pages and saves a .pkl
+* extract_links_from_html.py - extracts links from google search html pages (saved locally)
+* fb_searchscrape_manuallinks.py - scrapes specific facebook links (extracted from above) and saves a .pkl
