@@ -1,7 +1,7 @@
 # SAFFI-Project
 ## About
 
-
+This project involved scraping discussions from online forums in order to evaluate consumer sentiments on the safety of various baby-food products.
 
 # Package Setup
 ```
