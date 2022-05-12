@@ -1,7 +1,7 @@
 # SAFFI-Project
 ## About
 
-This project involved scraping discussions from online forums in order to evaluate consumer sentiments on the safety of various baby-food products. For more details on the methods and results please check `report.pdf`
+This project involved scraping discussions from online forums in order to evaluate consumer sentiments on the safety of various baby-food products. For more details on the methods and results please check [the report.](https://github.com/nershman/SAFFI-Project/blob/master/report.pdf)
 
 # Package Setup
 ```
