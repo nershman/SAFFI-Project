@@ -1,7 +1,9 @@
 # SAFFI-Project
 ## About
 
-This project involved scraping discussions from online forums in order to evaluate consumer sentiments on the safety of various baby-food products. For more details on the methods and results please check [the report.](https://github.com/nershman/SAFFI-Project/blob/master/report.pdf)
+This package is for reproducing the primary analysis I performed as part of my internship at IRIT in partnership with SAFFI project at INRAE. Running the scrape will scrape relevant data from both Netmums forum and Facebook and save it to a pickled dict. Running the analysis generate all graphs and tables from the report, after performin ETL on the pickled dict and cleaning. (Analysis is only performed on Netmums data, as we decided Facebook data was too noisy to find valuable information)
+
+For more details check out [the report.](https://github.com/nershman/SAFFI-Project/blob/master/report.pdf)
 
 # Package Setup
 ```
